@@ -1,0 +1,220 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Календарь — DevOps Roadmap</title>
+  <link rel="stylesheet" href="css/style.css">
+</head>
+<body>
+<nav class="site-nav">
+  <div class="nav-inner">
+    <div class="nav-logo"><div class="nav-logo-dot"></div>DEVOPS_ROADMAP</div>
+    <div class="nav-links">
+      <a href="index.html"       class="nav-link">Главная</a>
+      <a href="calendar.html"    class="nav-link active">Календарь</a>
+      <a href="sprints/s01.html" class="nav-link">Спринты</a>
+      <a href="notes.html"       class="nav-link">Конспекты</a>
+      <a href="map.html"          class="nav-link">Карта</a>
+    </div>
+  </div>
+</nav>
+<div class="wrap">
+
+  <!-- HERO -->
+  <div class="cal-hero fu">
+    <div class="cal-glow"></div>
+    <div class="eyebrow">// Планирование</div>
+    <h1 class="cal-h1">Календарь <em>спринтов</em></h1>
+    <p class="cal-sub">28 спринтов · 56 недель · выбери дату старта — все даты пересчитаются.</p>
+    <div class="datepick fu1">
+      <div class="dp-lbl">📅 Дата старта</div>
+      <input class="dp-input" type="date" id="startDate">
+      <div class="dp-end">→ финиш <span id="endLbl">—</span></div>
+    </div>
+  </div>
+
+  <!-- PHASE LEGEND -->
+  <div class="sec-label fu1">Фазы обучения</div>
+  <div class="ph-legend fu2" id="ph-legend"></div>
+
+  <!-- TIMELINE BAR -->
+  <div class="tl-wrap fu2">
+    <div class="tl-label">Хронология — 28 спринтов</div>
+    <div class="tl-bar" id="tl-bar"></div>
+    <div class="tl-months" id="tl-months"></div>
+  </div>
+
+  <!-- VERTICAL MONTH LIST -->
+  <div class="sec-label fu3">По месяцам</div>
+  <div class="vmonth-list fu3" id="vmonth-list"></div>
+
+  <!-- MONTH CARDS -->
+  <div class="sec-label fu3">Карточки месяцев</div>
+  <div class="months-grid fu3" id="months-grid"></div>
+
+  <!-- CERTS -->
+  <div class="sec-label fu4">Сертификаты</div>
+  <div class="cert-list fu4" id="cert-list"></div>
+
+</div>
+<footer class="footer">DevOps Roadmap · Сценарий C · 28 спринтов · 4 сертификата</footer>
+<script src="js/data.js"></script>
+<script>
+const PC  = {linux:'#38BDF8',docker:'#60A5FA',cicd:'#34D399',cloud:'#FB923C',
+             k8s:'#F87171',buffer:'#A3E635',exam:'#FFC443',phase2:'#C084FC'};
+const PBG = {linux:'rgba(56,189,248,.52)',docker:'rgba(96,165,250,.52)',
+             cicd:'rgba(52,211,153,.52)',cloud:'rgba(251,146,60,.52)',
+             k8s:'rgba(248,113,113,.52)',buffer:'rgba(163,230,53,.48)',
+             exam:'rgba(255,196,67,.58)',phase2:'rgba(192,132,252,.52)'};
+
+function addDays(d,n){const r=new Date(d);r.setDate(r.getDate()+n);return r;}
+function ss(sp,b){return addDays(b,(sp.id-1)*14);}
+function se(sp,b){return addDays(b,sp.id*14-1);}
+function fmt(d){return d.toLocaleDateString('ru-RU',{day:'numeric',month:'short'});}
+function fmtFull(d){return d.toLocaleDateString('ru-RU',{day:'numeric',month:'long',year:'numeric'});}
+function fmtM(d){return d.toLocaleDateString('ru-RU',{month:'long',year:'numeric'});}
+function fmtShortM(d){return d.toLocaleDateString('ru-RU',{month:'short',year:'2-digit'});}
+function sl(sp){return'sprints/s'+String(sp.id).padStart(2,'0')+'.html';}
+
+let base;
+const inp = document.getElementById('startDate');
+(function(){
+  const sv = localStorage.getItem('rdm-start');
+  const t = new Date(); t.setHours(0,0,0,0);
+  base = sv ? new Date(sv) : t;
+  inp.value = base.toISOString().slice(0,10);
+})();
+inp.addEventListener('change', () => {
+  if (!inp.value) return;
+  base = new Date(inp.value);
+  localStorage.setItem('rdm-start', inp.value);
+  render();
+});
+
+/* ── Current sprint marker ─────────────────────────────────────── */
+function getCurrentId() {
+  const now = new Date(); now.setHours(0,0,0,0);
+  const diff = Math.floor((now - base) / 86400000);
+  if (diff < 0) return null;
+  const idx = Math.floor(diff / 14);
+  if (idx >= SPRINTS.length) return SPRINTS[SPRINTS.length-1].id;
+  return SPRINTS[idx].id;
+}
+
+function render() {
+  document.getElementById('endLbl').textContent = fmtFull(addDays(base, 56*7-1));
+
+  /* Legend */
+  const lw = document.getElementById('ph-legend'); lw.innerHTML = '';
+  Object.entries(PHASE_META).forEach(([k,m]) => {
+    const c = PC[k] || m.color || '#888';
+    const el = document.createElement('div'); el.className = 'ph-pill';
+    el.innerHTML = `<div class="ph-dot" style="background:${c};box-shadow:0 0 5px ${c}66"></div>${m.label}`;
+    lw.appendChild(el);
+  });
+
+  /* Timeline bar */
+  const tb = document.getElementById('tl-bar'); tb.innerHTML = '';
+  SPRINTS.forEach(sp => {
+    const a = document.createElement('a');
+    a.className = 'tl-seg' + (sp.exam && !sp.exam.includes('опц') ? ' is-exam' : '');
+    a.href = sl(sp);
+    a.title = `S${sp.id}: ${sp.title}\n${fmt(ss(sp,base))} – ${fmt(se(sp,base))}`;
+    a.style.cssText = `flex:1;background:${PBG[sp.phase]||PC[sp.phase]};`;
+    a.textContent = `S${sp.id}`;
+    tb.appendChild(a);
+  });
+
+  /* Month ticks */
+  const mw = document.getElementById('tl-months'); mw.innerHTML = '';
+  for (let m = 0; m < 14; m++) {
+    const d = addDays(base, m*28);
+    const el = document.createElement('div');
+    el.className = 'tl-month-tick'; el.style.flex = '1';
+    el.textContent = d.toLocaleDateString('ru-RU',{month:'short'}) + ' ' + d.getFullYear().toString().slice(2);
+    mw.appendChild(el);
+  }
+
+  /* ── VERTICAL MONTH LIST ─────────────────────────────────────── */
+  const vml = document.getElementById('vmonth-list'); vml.innerHTML = '';
+  const currentId = getCurrentId();
+
+  // Group sprints by calendar month of their start date
+  const monthGroups = {};
+  SPRINTS.forEach(sp => {
+    const d = ss(sp, base);
+    const k = `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}`;
+    if (!monthGroups[k]) monthGroups[k] = {date: new Date(d.getFullYear(), d.getMonth(), 1), sprints: []};
+    monthGroups[k].sprints.push(sp);
+  });
+
+  Object.values(monthGroups).forEach(({date, sprints}) => {
+    // Month header
+    const mhdr = document.createElement('div');
+    mhdr.className = 'vmr-month-hdr';
+    mhdr.textContent = fmtM(date);
+    vml.appendChild(mhdr);
+
+    sprints.forEach(sp => {
+      const c = PC[sp.phase] || '#888';
+      const bg = PBG[sp.phase] || c;
+      const isCur = sp.id === currentId;
+      const startD = ss(sp, base), endD = se(sp, base);
+
+      const row = document.createElement('a');
+      row.className = 'vmonth-row';
+      row.href = sl(sp);
+      row.title = sp.title;
+      row.innerHTML = `
+        <div class="vmr-month" style="color:${isCur?'var(--grn)':''}">${
+          isCur ? '▶ S'+String(sp.id).padStart(2,'0') : 'S'+String(sp.id).padStart(2,'0')
+        }</div>
+        <div class="vmr-bar-wrap">
+          <div class="vmr-bar-track">
+            <div class="vmr-seg" style="flex:1;background:${bg}" title="${sp.title}">
+              ${sp.title.substring(0,38)}${sp.title.length>38?'…':''}
+            </div>
+          </div>
+        </div>
+        <div class="vmr-dates" style="${isCur?'color:var(--grn)':''}">${fmt(startD)} – ${fmt(endD)}</div>`;
+      vml.appendChild(row);
+    });
+  });
+
+  /* Month cards */
+  const mg = document.getElementById('months-grid'); mg.innerHTML = '';
+  Object.values(monthGroups).forEach(({date, sprints}) => {
+    const card = document.createElement('div'); card.className = 'mcrd';
+    const hd = document.createElement('div'); hd.className = 'mcrd-hd';
+    hd.textContent = fmtM(date); card.appendChild(hd);
+    const body = document.createElement('div'); body.className = 'mcrd-body';
+    sprints.forEach(sp => {
+      const c = PC[sp.phase] || '#888';
+      const row = document.createElement('a'); row.className = 'mrow'; row.href = sl(sp); row.title = sp.title;
+      row.innerHTML = `<div class="mrow-num">S${String(sp.id).padStart(2,'0')}</div>`
+        + `<div class="mrow-bar" style="background:${c}"></div>`
+        + `<div class="mrow-dates" style="color:${c}">${fmt(ss(sp,base))}–${fmt(se(sp,base))}</div>`;
+      body.appendChild(row);
+    });
+    card.appendChild(body); mg.appendChild(card);
+  });
+
+  /* Certs */
+  const cl = document.getElementById('cert-list'); cl.innerHTML = '';
+  SPRINTS.filter(sp => sp.exam && !sp.exam.includes('опц')).forEach(sp => {
+    const d = se(sp, base);
+    const row = document.createElement('a'); row.className = 'cert-row'; row.href = sl(sp);
+    row.innerHTML = `<div class="cert-ico">🏆</div>`
+      + `<div><div class="cert-name">${sp.exam.replace('🏆 ','')}</div>`
+      + `<div class="cert-sprint" style="margin-top:3px">S${sp.id} · ${sp.title} · Нед. ${sp.weeks}</div></div>`
+      + `<div style="text-align:right"><div class="cert-date">${fmt(d)}</div>`
+      + `<div class="cert-sprint" style="margin-top:3px">${d.getFullYear()}</div></div>`;
+    cl.appendChild(row);
+  });
+}
+
+render();
+</script>
+</body>
+</html>

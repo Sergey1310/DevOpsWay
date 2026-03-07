@@ -1,0 +1,196 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Конспекты — DevOps Roadmap</title>
+  <link rel="stylesheet" href="css/style.css">
+</head>
+<body>
+<nav class="site-nav">
+  <div class="nav-inner">
+    <div class="nav-logo"><div class="nav-logo-dot"></div>DEVOPS_ROADMAP</div>
+    <div class="nav-links">
+      <a href="index.html"       class="nav-link">Главная</a>
+      <a href="calendar.html"    class="nav-link">Календарь</a>
+      <a href="sprints/s01.html" class="nav-link">Спринты</a>
+      <a href="notes.html"       class="nav-link active">Конспекты</a>
+      <a href="map.html"          class="nav-link">Карта</a>
+    </div>
+  </div>
+</nav>
+<div class="wrap">
+
+  <div class="sprint-hdr fu" style="margin-bottom:28px">
+    <div class="sprint-ey">
+      <span class="pill">📝 База знаний</span>
+    </div>
+    <h1 class="sprint-h1">Поиск по <em style="color:var(--grn)">конспектам</em></h1>
+    <p style="font-size:14px;color:var(--t3);margin-top:8px">Поиск по всем конспектам из 28 спринтов одновременно.</p>
+  </div>
+
+  <!-- Interview Scenarios Panel -->
+  <details class="interview-panel fu1" id="interview-panel">
+    <summary class="interview-panel-title">🎯 Топ DevOps troubleshooting сценариев — Interview Prep</summary>
+    <div class="interview-grid" id="interview-grid">
+      <a class="interview-card" href="sprints/s05.html">
+        <div class="ic-tag">S05 · Docker</div>
+        <div class="ic-title">Контейнер падает exit 137</div>
+        <div class="ic-body">OOM Kill — нет лимитов памяти или лимит слишком мал. Проверь: <code>docker stats</code>, <code>docker inspect</code> → HostConfig.Memory</div>
+        <div class="ic-tools">docker stats · docker inspect · dmesg</div>
+      </a>
+      <a class="interview-card" href="sprints/s08.html">
+        <div class="ic-tag">S08 · CI/CD</div>
+        <div class="ic-title">CI зелёный, деплой не идёт</div>
+        <div class="ic-body">Environment protection rule / required approval не выполнен. Или secrets не пробрасываются в environment. Проверь: Actions → Environments → Protection rules.</div>
+        <div class="ic-tools">GitHub Actions logs · env secrets audit</div>
+      </a>
+      <a class="interview-card" href="sprints/s12.html">
+        <div class="ic-tag">S12 · Terraform</div>
+        <div class="ic-title">Terraform state lock error</div>
+        <div class="ic-body">Параллельный apply или упавший предыдущий оставил lock в DynamoDB. Проверь: <code>terraform force-unlock &lt;LOCK_ID&gt;</code>. Убедись что нет другого apply.</div>
+        <div class="ic-tools">terraform force-unlock · AWS DynamoDB console</div>
+      </a>
+      <a class="interview-card" href="sprints/s19.html">
+        <div class="ic-tag">S19 · K8s</div>
+        <div class="ic-title">Pod застрял в Pending</div>
+        <div class="ic-body">Нет ресурсов (CPU/memory requests превышают доступные), неверный nodeSelector/taints, PVC не bound. Проверь: <code>kubectl describe pod</code> → Events секция.</div>
+        <div class="ic-tools">kubectl describe pod · kubectl get nodes -o wide</div>
+      </a>
+      <a class="interview-card" href="sprints/s19.html">
+        <div class="ic-tag">S19 · K8s</div>
+        <div class="ic-title">Service недоступен внутри кластера</div>
+        <div class="ic-body">Selector mismatch между Service и Pod labels — самая частая причина. Проверь: <code>kubectl get endpoints &lt;svc&gt;</code> — если пусто, selector не совпадает.</div>
+        <div class="ic-tools">kubectl get endpoints · kubectl get pods --show-labels</div>
+      </a>
+      <a class="interview-card" href="sprints/s19.html">
+        <div class="ic-tag">S19 · K8s</div>
+        <div class="ic-title">DNS resolution fails в поде</div>
+        <div class="ic-body">CoreDNS не работает или NetworkPolicy блокирует UDP 53. Проверь: <code>kubectl exec -it &lt;pod&gt; -- nslookup kubernetes.default</code>. Logs: <code>kubectl logs -n kube-system -l k8s-app=kube-dns</code></div>
+        <div class="ic-tools">nslookup · kubectl logs CoreDNS · dig</div>
+      </a>
+      <a class="interview-card" href="sprints/s04.html">
+        <div class="ic-tag">S04 · Linux</div>
+        <div class="ic-title">Сервис недоступен по сети</div>
+        <div class="ic-body">iptables DROP правило, неверный маршрут, или MTU mismatch. Порядок диагностики: ping → traceroute → ss/netstat → iptables -L → ip route</div>
+        <div class="ic-tools">ping · traceroute · ss · iptables -L · ip route</div>
+      </a>
+      <a class="interview-card" href="sprints/s19.html">
+        <div class="ic-tag">S19 · K8s</div>
+        <div class="ic-title">CrashLoopBackOff</div>
+        <div class="ic-body">Неверный CMD/entrypoint, missing env var, failing readiness probe, OOMKilled. Проверь: <code>kubectl logs &lt;pod&gt; --previous</code> и <code>kubectl describe pod</code> → Last State.</div>
+        <div class="ic-tools">kubectl logs --previous · kubectl describe pod</div>
+      </a>
+    </div>
+  </details>
+
+  <div class="nssearch-wrap fu1">
+    <span class="nssearch-ico">🔍</span>
+    <input class="nssearch-input" id="ns-input" type="text"
+      placeholder="Поиск: iptables, kubectl, terraform, S3, docker-compose… (/ для фокуса)">
+  </div>
+
+  <div class="ns-stat" id="ns-stat"></div>
+  <div class="ns-results" id="ns-results"></div>
+
+</div>
+<footer class="footer">DevOps Roadmap · Конспекты · 28 спринтов</footer>
+<script src="js/data.js"></script>
+<script>
+const PC = {linux:'#38BDF8',docker:'#60A5FA',cicd:'#34D399',cloud:'#FB923C',
+            k8s:'#F87171',buffer:'#A3E635',exam:'#FFC443',phase2:'#C084FC'};
+
+/* ── Load all notes from localStorage ── */
+function getAllNotes() {
+  return SPRINTS.map(sp => {
+    const text = localStorage.getItem('sp-notes-' + sp.id) || '';
+    return { sp, text: text.trim() };
+  }).filter(n => n.text.length > 0);
+}
+
+/* ── Highlight query in text ── */
+function highlight(text, q) {
+  if (!q) return text;
+  const safe = q.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+  return text.replace(new RegExp(safe, 'gi'), m => `<mark>${m}</mark>`);
+}
+
+/* ── Extract snippet around match ── */
+function excerpt(text, q, len = 200) {
+  if (!q) return text.slice(0, len) + (text.length > len ? '…' : '');
+  const idx = text.toLowerCase().indexOf(q.toLowerCase());
+  if (idx === -1) return text.slice(0, len) + (text.length > len ? '…' : '');
+  const start = Math.max(0, idx - 60);
+  const end = Math.min(text.length, idx + len - 60);
+  const snip = (start > 0 ? '…' : '') + text.slice(start, end) + (end < text.length ? '…' : '');
+  return snip;
+}
+
+/* ── Render results ── */
+function render(q) {
+  const all = getAllNotes();
+  const stat = document.getElementById('ns-stat');
+  const res = document.getElementById('ns-results');
+
+  if (!q && all.length === 0) {
+    stat.textContent = '';
+    res.innerHTML = '<div class="ns-empty">Нет ни одного конспекта. Открой любой спринт и начни писать.</div>';
+    return;
+  }
+
+  if (!q) {
+    stat.textContent = `Конспектов: ${all.length} из 28 спринтов`;
+    res.innerHTML = all.map(({sp, text}) => buildCard(sp, text, '')).join('');
+    return;
+  }
+
+  const matches = all.filter(({text}) => text.toLowerCase().includes(q.toLowerCase()));
+  stat.textContent = matches.length
+    ? `Найдено: ${matches.length} конспект${matches.length === 1 ? '' : matches.length < 5 ? 'а' : 'ов'}`
+    : '';
+
+  if (!matches.length) {
+    res.innerHTML = `<div class="ns-empty">Ничего не найдено по «${q}»</div>`;
+    return;
+  }
+
+  res.innerHTML = matches.map(({sp, text}) => buildCard(sp, text, q)).join('');
+}
+
+function buildCard(sp, text, q) {
+  const ph = PHASE_META[sp.phase] || {label:'—'};
+  const c = PC[sp.phase] || '#888';
+  const snip = excerpt(text, q);
+  const hlSnip = highlight(snip.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;'), q);
+  return `<a class="ns-result-card" href="sprints/s${String(sp.id).padStart(2,'0')}.html">
+    <div class="ns-result-hdr">
+      <span class="ns-result-num">S${String(sp.id).padStart(2,'0')}</span>
+      <span style="font-family:var(--fm);font-size:10px;color:${c}">${ph.label}</span>
+      <span class="ns-result-title">${sp.title}</span>
+      <span style="font-family:var(--fm);font-size:9px;color:var(--t4)">${text.length} симв.</span>
+    </div>
+    <div class="ns-result-excerpt">${hlSnip}</div>
+  </a>`;
+}
+
+/* ── Search input ── */
+const input = document.getElementById('ns-input');
+let debounce;
+input.addEventListener('input', () => {
+  clearTimeout(debounce);
+  debounce = setTimeout(() => render(input.value.trim()), 180);
+});
+document.addEventListener('keydown', e => {
+  if (e.key === '/' && document.activeElement !== input) {
+    e.preventDefault(); input.focus(); input.select();
+  }
+  if (e.key === 'Escape' && document.activeElement === input) {
+    input.value = ''; render(''); input.blur();
+  }
+});
+
+/* ── Initial render ── */
+render('');
+</script>
+</body>
+</html>

@@ -1,0 +1,1948 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Skill Map — DevOps Roadmap</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link href="https://fonts.googleapis.com/css2?family=Syne:wght@400;600;700;800&family=JetBrains+Mono:wght@400;500;600&family=Space+Grotesk:wght@300;400;500&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="css/style.css">
+  <style>
+    :root {
+      --bg-deep: #050709;
+      --bg-panel: rgba(10,14,20,0.96);
+      --grid-line: rgba(56,189,248,0.04);
+      --node-glow-linux:   #38BDF8;
+      --node-glow-net:     #818CF8;
+      --node-glow-docker:  #60A5FA;
+      --node-glow-cicd:    #34D399;
+      --node-glow-tf:      #A78BFA;
+      --node-glow-aws:     #FB923C;
+      --node-glow-k8s:     #F87171;
+      --node-glow-obs:     #FFC443;
+      --node-glow-ops:     #C084FC;
+      --edge-default:      rgba(56,189,248,0.18);
+      --edge-active:       rgba(56,189,248,0.7);
+      --panel-w: 340px;
+    }
+
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+
+    body {
+      background: var(--bg-deep);
+      font-family: 'Space Grotesk', sans-serif;
+      color: #e2e8f0;
+      overflow-x: hidden;
+    }
+
+    /* ── Nav ── */
+    .map-nav {
+      position: fixed; top: 0; left: 0; right: 0; z-index: 100;
+      height: 52px;
+      background: rgba(5,7,9,0.9);
+      border-bottom: 1px solid rgba(56,189,248,0.12);
+      backdrop-filter: blur(12px);
+      display: flex; align-items: center;
+      padding: 0 24px; gap: 32px;
+    }
+    .map-nav-logo {
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 11px; font-weight: 600;
+      color: #38BDF8; letter-spacing: .15em;
+      display: flex; align-items: center; gap: 8px;
+      text-decoration: none;
+    }
+    .map-nav-logo-dot {
+      width: 6px; height: 6px; border-radius: 50%;
+      background: #38BDF8;
+      box-shadow: 0 0 8px #38BDF8;
+    }
+    .map-nav-links { display: flex; gap: 4px; margin-left: auto; }
+    .map-nav-link {
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 10px; color: rgba(148,163,184,.6);
+      text-decoration: none; padding: 6px 12px;
+      border-radius: 4px; letter-spacing: .06em;
+      transition: color .2s, background .2s;
+    }
+    .map-nav-link:hover { color: #e2e8f0; background: rgba(255,255,255,.05); }
+    .map-nav-link.active { color: #38BDF8; }
+
+    /* ── Legend ── */
+    .map-legend {
+      position: fixed; top: 110px; left: 20px; z-index: 90;
+      background: rgba(10,14,20,0.85);
+      border: 1px solid rgba(56,189,248,0.12);
+      border-radius: 8px; padding: 12px 14px;
+      backdrop-filter: blur(8px);
+      display: flex; flex-direction: column; gap: 7px;
+    }
+    .legend-title {
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 8px; color: rgba(148,163,184,.4);
+      letter-spacing: .12em; text-transform: uppercase;
+      margin-bottom: 2px;
+    }
+    .legend-item {
+      display: flex; align-items: center; gap: 8px;
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 9px; color: rgba(148,163,184,.6);
+    }
+    .legend-dot {
+      width: 10px; height: 10px; border-radius: 50%;
+      border: 2px solid;
+    }
+    .ld-locked   { border-color: rgba(100,116,139,.4); background: rgba(100,116,139,.08); }
+    .ld-available{ border-color: rgba(56,189,248,.5);  background: rgba(56,189,248,.08); }
+    .ld-progress { border-color: #FFC443; background: rgba(255,196,67,.12);
+                   box-shadow: 0 0 6px rgba(255,196,67,.3); }
+    .ld-done     { border-color: #34D399; background: rgba(52,211,153,.15);
+                   box-shadow: 0 0 6px rgba(52,211,153,.3); }
+
+    /* ── Map container ── */
+    #map-wrap {
+      position: fixed;
+      top: 52px; left: 0; right: 0; bottom: 0;
+      overflow: auto;
+      cursor: grab;
+    }
+    #map-wrap.grabbing { cursor: grabbing; }
+
+    #map-stage {
+      position: relative;
+      width: 1200px;
+      min-height: 1800px;
+      margin: 0 auto;
+    }
+
+    /* ── Grid background ── */
+    #map-stage::before {
+      content: '';
+      position: absolute; inset: 0;
+      background-image:
+        linear-gradient(var(--grid-line) 1px, transparent 1px),
+        linear-gradient(90deg, var(--grid-line) 1px, transparent 1px);
+      background-size: 40px 40px;
+      pointer-events: none;
+    }
+
+    /* ── SVG edges ── */
+    #edges-svg {
+      position: absolute; top: 0; left: 0;
+      width: 100%; height: 100%;
+      pointer-events: none;
+      overflow: visible;
+      z-index: 2;
+    }
+
+    .edge {
+      fill: none;
+      stroke: var(--edge-default);
+      stroke-width: 1.5;
+      stroke-dasharray: 6 4;
+      transition: stroke .3s, stroke-width .3s, opacity .3s;
+    }
+    .edge.lit {
+      stroke: var(--edge-active);
+      stroke-width: 2;
+      stroke-dasharray: none;
+      filter: drop-shadow(0 0 4px rgba(56,189,248,.5));
+    }
+    .edge.dim { opacity: .15; }
+
+    /* ── Nodes ── */
+    .node {
+      position: absolute;
+      transform: translate(-50%, -50%);
+      cursor: pointer;
+      transition: transform .2s;
+      z-index: 3;
+    }
+    .node:hover { transform: translate(-50%,-50%) scale(1.08); z-index: 10; }
+    .node.selected { transform: translate(-50%,-50%) scale(1.06); z-index: 10; }
+
+    .node-inner {
+      position: relative;
+      display: flex; flex-direction: column;
+      align-items: center; justify-content: center;
+      gap: 6px;
+    }
+
+    /* Hexagonal node shape */
+    .node-hex {
+      width: 64px; height: 64px;
+      clip-path: polygon(50% 0%,93% 25%,93% 75%,50% 100%,7% 75%,7% 25%);
+      display: flex; align-items: center; justify-content: center;
+      font-size: 22px;
+      transition: box-shadow .3s, background .3s;
+      position: relative;
+    }
+
+    /* Smaller satellite nodes */
+    .node.sm .node-hex { width: 48px; height: 48px; font-size: 16px; }
+
+    .node-label {
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 10px; font-weight: 600;
+      letter-spacing: .06em;
+      white-space: nowrap;
+      text-align: center;
+      transition: color .3s;
+    }
+    .node.sm .node-label { font-size: 9px; }
+
+    /* Status styles */
+    .node.locked .node-hex {
+      background: rgba(15,23,42,.8);
+      border: 1.5px solid rgba(100,116,139,.25);
+    }
+    .node.locked .node-label { color: rgba(100,116,139,.5); }
+    .node.locked .node-hex::after {
+      content: '🔒';
+      font-size: 11px;
+      position: absolute; bottom: 6px; right: 4px;
+    }
+
+    .node.available .node-hex {
+      background: rgba(56,189,248,.06);
+      border: 1.5px solid rgba(56,189,248,.35);
+    }
+    .node.available .node-label { color: rgba(148,163,184,.8); }
+
+    .node.progress .node-hex {
+      background: rgba(255,196,67,.1);
+      border: 2px solid rgba(255,196,67,.6);
+      box-shadow: 0 0 16px rgba(255,196,67,.2), inset 0 0 20px rgba(255,196,67,.05);
+    }
+    .node.progress .node-label { color: #FFC443; }
+
+    .node.done .node-hex {
+      background: rgba(52,211,153,.1);
+      border: 2px solid rgba(52,211,153,.6);
+      box-shadow: 0 0 20px rgba(52,211,153,.25), inset 0 0 20px rgba(52,211,153,.05);
+    }
+    .node.done .node-label { color: #34D399; }
+    .node.done .node-hex::after {
+      content: '✓';
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 9px; font-weight: 700;
+      color: #34D399;
+      position: absolute; top: 3px; right: 5px;
+    }
+
+    /* Colored glow on hover by group */
+    .node[data-group="linux"]:not(.locked):hover .node-hex,
+    .node[data-group="linux"].selected .node-hex   { box-shadow: 0 0 28px rgba(56,189,248,.5); }
+    .node[data-group="net"]:not(.locked):hover .node-hex,
+    .node[data-group="net"].selected .node-hex     { box-shadow: 0 0 28px rgba(129,140,248,.5); }
+    .node[data-group="docker"]:not(.locked):hover .node-hex,
+    .node[data-group="docker"].selected .node-hex  { box-shadow: 0 0 28px rgba(96,165,250,.5); }
+    .node[data-group="cicd"]:not(.locked):hover .node-hex,
+    .node[data-group="cicd"].selected .node-hex    { box-shadow: 0 0 28px rgba(52,211,153,.5); }
+    .node[data-group="tf"]:not(.locked):hover .node-hex,
+    .node[data-group="tf"].selected .node-hex      { box-shadow: 0 0 28px rgba(167,139,250,.5); }
+    .node[data-group="aws"]:not(.locked):hover .node-hex,
+    .node[data-group="aws"].selected .node-hex     { box-shadow: 0 0 28px rgba(251,146,60,.5); }
+    .node[data-group="k8s"]:not(.locked):hover .node-hex,
+    .node[data-group="k8s"].selected .node-hex     { box-shadow: 0 0 28px rgba(248,113,113,.5); }
+    .node[data-group="obs"]:not(.locked):hover .node-hex,
+    .node[data-group="obs"].selected .node-hex     { box-shadow: 0 0 28px rgba(255,196,67,.5); }
+    .node[data-group="ops"]:not(.locked):hover .node-hex,
+    .node[data-group="ops"].selected .node-hex     { box-shadow: 0 0 28px rgba(192,132,252,.5); }
+
+    /* ── Group labels ── */
+    .group-label {
+      position: absolute;
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 9px; font-weight: 600;
+      letter-spacing: .14em; text-transform: uppercase;
+      opacity: .3;
+      pointer-events: none;
+    }
+
+    /* ── Tooltip ── */
+    #tooltip {
+      position: fixed;
+      background: rgba(10,14,20,.95);
+      border: 1px solid rgba(56,189,248,.25);
+      border-radius: 6px;
+      padding: 8px 12px;
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 10px; color: #94a3b8;
+      pointer-events: none;
+      z-index: 200;
+      max-width: 200px;
+      opacity: 0;
+      transition: opacity .15s;
+    }
+    #tooltip.visible { opacity: 1; }
+    #tooltip strong { color: #e2e8f0; display: block; margin-bottom: 3px; }
+
+    /* ── Side panel ── */
+    #side-panel {
+      position: fixed;
+      top: 52px; right: 0;
+      width: var(--panel-w);
+      height: calc(100vh - 52px);
+      background: var(--bg-panel);
+      border-left: 1px solid rgba(56,189,248,.12);
+      transform: translateX(100%);
+      transition: transform .3s cubic-bezier(.16,1,.3,1);
+      z-index: 80;
+      overflow-y: auto;
+      padding: 24px 20px;
+      backdrop-filter: blur(16px);
+    }
+    #side-panel.open { transform: translateX(0); }
+
+    .panel-close {
+      position: absolute; top: 16px; right: 16px;
+      width: 28px; height: 28px;
+      background: rgba(255,255,255,.05);
+      border: 1px solid rgba(255,255,255,.1);
+      border-radius: 50%;
+      cursor: pointer; font-size: 14px;
+      display: flex; align-items: center; justify-content: center;
+      color: #64748b; transition: all .2s;
+    }
+    .panel-close:hover { color: #e2e8f0; background: rgba(255,255,255,.1); }
+
+    .panel-group-tag {
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 9px; font-weight: 700;
+      letter-spacing: .12em; text-transform: uppercase;
+      padding: 3px 8px; border-radius: 3px;
+      display: inline-block; margin-bottom: 12px;
+    }
+
+    .panel-title {
+      font-family: 'Syne', sans-serif;
+      font-size: 22px; font-weight: 800;
+      color: #f1f5f9; line-height: 1.2;
+      margin-bottom: 8px;
+    }
+
+    .panel-desc {
+      font-size: 13px; color: #94a3b8;
+      line-height: 1.7; margin-bottom: 20px;
+    }
+
+    .panel-section {
+      margin-bottom: 16px;
+    }
+    .panel-section-title {
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 9px; font-weight: 600;
+      letter-spacing: .1em; text-transform: uppercase;
+      color: rgba(148,163,184,.4);
+      margin-bottom: 8px;
+    }
+    .panel-section-body {
+      font-size: 12px; color: #94a3b8;
+      line-height: 1.6;
+    }
+
+    .panel-tags {
+      display: flex; flex-wrap: wrap; gap: 6px;
+    }
+    .panel-tag {
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 10px; color: #64748b;
+      background: rgba(255,255,255,.04);
+      border: 1px solid rgba(255,255,255,.08);
+      border-radius: 4px; padding: 3px 8px;
+    }
+    .panel-tag.sprint-tag {
+      color: #38BDF8;
+      border-color: rgba(56,189,248,.2);
+      background: rgba(56,189,248,.06);
+      cursor: pointer;
+      text-decoration: none;
+      display: inline-block;
+    }
+    .panel-tag.sprint-tag:hover {
+      background: rgba(56,189,248,.12);
+    }
+
+    .panel-divider {
+      height: 1px;
+      background: rgba(255,255,255,.06);
+      margin: 16px 0;
+    }
+
+    .panel-interview {
+      background: rgba(255,196,67,.06);
+      border: 1px solid rgba(255,196,67,.2);
+      border-radius: 6px;
+      padding: 12px;
+      font-size: 11px; color: rgba(255,196,67,.8);
+      line-height: 1.6;
+    }
+    .panel-interview::before {
+      content: '🎯 Interview';
+      display: block;
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 9px; font-weight: 700;
+      letter-spacing: .1em;
+      color: #FFC443; margin-bottom: 6px;
+    }
+
+    .panel-status-row {
+      display: flex; align-items: center; gap: 10px;
+      margin-bottom: 20px;
+    }
+    .panel-status-dot {
+      width: 10px; height: 10px; border-radius: 50%;
+      border: 2px solid;
+    }
+    .panel-status-label {
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 10px;
+    }
+
+    /* ── Progress bar in panel ── */
+    .panel-progress-bar {
+      height: 3px; border-radius: 2px;
+      background: rgba(255,255,255,.08);
+      margin-top: 8px; overflow: hidden;
+    }
+    .panel-progress-fill {
+      height: 100%; border-radius: 2px;
+      transition: width .4s;
+    }
+
+    /* ── Stats row ── */
+    .map-stats {
+      position: fixed;
+      bottom: 20px; left: 50%;
+      transform: translateX(-50%);
+      display: flex; gap: 20px;
+      background: rgba(10,14,20,.9);
+      border: 1px solid rgba(56,189,248,.12);
+      border-radius: 8px; padding: 10px 20px;
+      backdrop-filter: blur(8px);
+      z-index: 90;
+    }
+    .stat-item {
+      text-align: center;
+    }
+    .stat-n {
+      font-family: 'Syne', sans-serif;
+      font-size: 18px; font-weight: 800;
+      color: #38BDF8; line-height: 1;
+    }
+    .stat-l {
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 8px; color: rgba(148,163,184,.4);
+      letter-spacing: .08em; text-transform: uppercase;
+      margin-top: 2px;
+    }
+    .stat-divider { width: 1px; background: rgba(255,255,255,.08); }
+
+    /* ── Scan line animation ── */
+    @keyframes scanline {
+      0%   { top: -2px; }
+      100% { top: 100%; }
+    }
+    #map-stage::after {
+      content: '';
+      position: absolute; left: 0; right: 0;
+      height: 2px;
+      background: linear-gradient(transparent, rgba(56,189,248,.08), transparent);
+      animation: scanline 8s linear infinite;
+      pointer-events: none;
+      z-index: 0;
+    }
+
+    @keyframes pulse-glow {
+      0%,100% { opacity: .6; }
+      50%      { opacity: 1; }
+    }
+    .node.progress .node-hex { animation: pulse-glow 2s ease-in-out infinite; }
+
+    /* Scrollbar */
+    #map-wrap::-webkit-scrollbar { width: 6px; height: 6px; }
+    #map-wrap::-webkit-scrollbar-track { background: transparent; }
+    #map-wrap::-webkit-scrollbar-thumb { background: rgba(56,189,248,.2); border-radius: 3px; }
+
+    /* ── Mode Switcher ───────────────────────────────── */
+    .mode-switcher {
+      position: fixed;
+      top: 62px; left: 50%; transform: translateX(-50%);
+      z-index: 96;
+      display: flex;
+      background: rgba(5,7,9,.9);
+      border: 1px solid rgba(56,189,248,.15);
+      border-radius: 22px;
+      padding: 4px;
+      gap: 2px;
+      backdrop-filter: blur(14px);
+    }
+    .mode-btn {
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 10px; font-weight: 700;
+      letter-spacing: .1em;
+      padding: 6px 18px;
+      border-radius: 18px;
+      border: none;
+      cursor: pointer;
+      transition: all .22s cubic-bezier(.4,0,.2,1);
+      background: transparent;
+      color: rgba(148,163,184,.5);
+    }
+    .mode-btn:hover { color: #e2e8f0; background: rgba(255,255,255,.06); }
+    .mode-btn.active {
+      background: rgba(56,189,248,.15);
+      color: #38BDF8;
+      box-shadow: 0 0 14px rgba(56,189,248,.2);
+    }
+    .mode-btn.active-system {
+      background: rgba(167,139,250,.15);
+      color: #A78BFA;
+      box-shadow: 0 0 14px rgba(167,139,250,.2);
+    }
+    .mode-sep { width: 1px; background: rgba(255,255,255,.08); margin: 4px 2px; }
+
+    /* ── Filter bar repositions when mode switcher is above it ─ */
+    .has-mode-switch .map-filter-bar {
+      top: 108px;
+    }
+
+    /* ── System layer colors ─────────────────────────── */
+    :root {
+      --layer-source:       #38BDF8;
+      --layer-delivery:     #34D399;
+      --layer-platform:     #A78BFA;
+      --layer-runtime:      #F87171;
+      --layer-observability:#FFC443;
+    }
+
+    /* ── System mode: node shape = circle ───────────── */
+    body.mode-system .node .node-hex {
+      clip-path: circle(44%);
+      border-radius: 50%;
+    }
+    body.mode-system .node.sm .node-hex {
+      clip-path: circle(44%);
+    }
+
+    /* ── System layer lane labels ────────────────────── */
+    .layer-lane {
+      position: absolute;
+      left: 24px;
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 9px; font-weight: 700;
+      letter-spacing: .14em; text-transform: uppercase;
+      opacity: .35;
+      pointer-events: none;
+      display: flex; align-items: center; gap: 8px;
+    }
+    .layer-lane::before {
+      content: '';
+      display: block;
+      width: 8px; height: 8px;
+      border-radius: 50%;
+      background: currentColor;
+      flex-shrink: 0;
+    }
+
+    /* ── System panel cross-link section ─────────────── */
+    .panel-crosslink {
+      background: rgba(167,139,250,.06);
+      border: 1px solid rgba(167,139,250,.2);
+      border-radius: 6px;
+      padding: 12px;
+      margin-bottom: 16px;
+    }
+    .panel-crosslink-title {
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 9px; font-weight: 700;
+      letter-spacing: .1em; text-transform: uppercase;
+      color: rgba(167,139,250,.7);
+      margin-bottom: 8px;
+    }
+    .panel-crosslink-tag {
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 10px;
+      color: #A78BFA;
+      background: rgba(167,139,250,.08);
+      border: 1px solid rgba(167,139,250,.2);
+      border-radius: 4px;
+      padding: 3px 8px;
+      cursor: pointer;
+      transition: background .15s;
+      display: inline-block;
+      margin: 2px;
+    }
+    .panel-crosslink-tag:hover { background: rgba(167,139,250,.18); }
+
+    /* ── Mode transition animation ───────────────────── */
+    @keyframes modeSwitch {
+      from { opacity: 0; transform: translate(-50%,-50%) scale(0.75); }
+      to   { opacity: 1; transform: translate(-50%,-50%) scale(1); }
+    }
+    body.switching .node { animation: modeSwitch .35s cubic-bezier(.34,1.56,.64,1) both; }
+
+    /* ── Node type visual differentiation ───────────────── */
+
+    /* CORE: hexagon (existing clip-path — unchanged) */
+
+    /* PRACTICAL: rounded rectangle shape */
+    .node[data-type="practical"] .node-hex {
+      clip-path: none;
+      border-radius: 10px;
+      width: 52px; height: 52px;
+      font-size: 18px;
+    }
+    .node[data-type="practical"].sm .node-hex {
+      width: 42px; height: 42px;
+      font-size: 15px;
+    }
+
+    /* INCIDENT: diamond / rotated square */
+    .node[data-type="incident"] .node-hex {
+      clip-path: polygon(50% 0%, 100% 50%, 50% 100%, 0% 50%);
+      border-radius: 0;
+      font-size: 18px;
+    }
+    .node[data-type="incident"] .node-label {
+      font-size: 8px !important;
+    }
+
+    /* Incident-specific color overrides */
+    .node[data-type="incident"].available .node-hex {
+      background: rgba(239,68,68,.08);
+      border: 2px solid rgba(239,68,68,.4);
+    }
+    .node[data-type="incident"].progress .node-hex {
+      background: rgba(239,68,68,.15);
+      border: 2px solid rgba(239,68,68,.7);
+      box-shadow: 0 0 18px rgba(239,68,68,.25);
+    }
+    .node[data-type="incident"].done .node-hex {
+      background: rgba(52,211,153,.12);
+      border: 2px solid rgba(52,211,153,.6);
+      box-shadow: 0 0 18px rgba(52,211,153,.25);
+    }
+    .node[data-type="incident"]:not(.locked):hover .node-hex {
+      box-shadow: 0 0 24px rgba(239,68,68,.45);
+    }
+
+    /* Practical skill — dashed border */
+    .node[data-type="practical"].available .node-hex {
+      border-style: dashed !important;
+      border-width: 1.5px !important;
+    }
+
+    /* Type badge on node */
+    .node-type-badge {
+      position: absolute;
+      top: -6px; right: -6px;
+      width: 14px; height: 14px;
+      border-radius: 50%;
+      font-size: 7px;
+      display: flex; align-items: center; justify-content: center;
+      font-weight: 700;
+      font-family: 'JetBrains Mono', monospace;
+      letter-spacing: 0;
+    }
+    .type-badge-core     { background: rgba(56,189,248,.15); color: #38BDF8; border: 1px solid rgba(56,189,248,.3); }
+    .type-badge-practical{ background: rgba(52,211,153,.15); color: #34D399; border: 1px solid rgba(52,211,153,.3); }
+    .type-badge-incident { background: rgba(239,68,68,.15);  color: #EF4444; border: 1px solid rgba(239,68,68,.3); }
+
+    /* ── Filter bar ──────────────────────────────────────── */
+    .map-filter-bar {
+      position: fixed;
+      top: 62px; left: 50%; transform: translateX(-50%);
+      z-index: 95;
+      display: flex; gap: 6px;
+      background: rgba(5,7,9,.85);
+      border: 1px solid rgba(56,189,248,.1);
+      border-radius: 20px;
+      padding: 5px 10px;
+      backdrop-filter: blur(12px);
+    }
+    .filter-btn {
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 9px; font-weight: 600;
+      letter-spacing: .08em;
+      padding: 4px 12px;
+      border-radius: 12px;
+      border: 1px solid transparent;
+      cursor: pointer;
+      transition: all .2s;
+      background: transparent;
+      color: rgba(148,163,184,.5);
+    }
+    .filter-btn:hover { color: #e2e8f0; background: rgba(255,255,255,.06); }
+    .filter-btn.active-all  { background: rgba(56,189,248,.12); color: #38BDF8; border-color: rgba(56,189,248,.3); }
+    .filter-btn.active-core { background: rgba(56,189,248,.12); color: #38BDF8; border-color: rgba(56,189,248,.3); }
+    .filter-btn.active-practical { background: rgba(52,211,153,.1); color: #34D399; border-color: rgba(52,211,153,.25); }
+    .filter-btn.active-incident  { background: rgba(239,68,68,.1);  color: #EF4444; border-color: rgba(239,68,68,.25); }
+    .filter-sep { width: 1px; background: rgba(255,255,255,.08); margin: 2px 2px; }
+
+    /* ── Appear animation ────────────────────────────────── */
+    @keyframes nodeAppear {
+      from { opacity: 0; transform: translate(-50%,-50%) scale(0.6); }
+      to   { opacity: 1; transform: translate(-50%,-50%) scale(1); }
+    }
+    .node { animation: nodeAppear .4s cubic-bezier(.34,1.56,.64,1) both; }
+    .node.selected { animation: none; }
+
+    /* ── Legend update: add type row ─────────────────────── */
+    .legend-type-row {
+      display: flex; align-items: center; gap: 7px;
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 9px; color: rgba(148,163,184,.5);
+      margin-top: 4px;
+    }
+    .legend-shape {
+      display: flex; align-items: center; justify-content: center;
+      width: 12px; height: 12px; flex-shrink: 0;
+    }
+    .ls-hex { clip-path: polygon(50% 0%,93% 25%,93% 75%,50% 100%,7% 75%,7% 25%);
+              background: rgba(56,189,248,.2); width: 12px; height: 12px; }
+    .ls-rect { border-radius: 3px; border: 1.5px dashed rgba(52,211,153,.5);
+               width: 12px; height: 12px; }
+    .ls-diamond { clip-path: polygon(50% 0%,100% 50%,50% 100%,0% 50%);
+                  background: rgba(239,68,68,.25); width: 12px; height: 12px; }
+  </style>
+</head>
+<body>
+
+<!-- Nav -->
+<nav class="map-nav">
+  <a href="index.html" class="map-nav-logo">
+    <div class="map-nav-logo-dot"></div>
+    DEVOPS_ROADMAP
+  </a>
+  <div class="map-nav-links">
+    <a href="index.html"        class="map-nav-link">Главная</a>
+    <a href="calendar.html"     class="map-nav-link">Календарь</a>
+    <a href="sprints/s01.html"  class="map-nav-link">Спринты</a>
+    <a href="notes.html"        class="map-nav-link">Конспекты</a>
+    <a href="map.html"          class="map-nav-link active">Карта</a>
+  </div>
+</nav>
+
+<!-- Mode switcher -->
+<div class="mode-switcher" id="mode-switcher">
+  <button class="mode-btn active" id="btn-skill" onclick="setMode('skill')">⬡ SKILL GRAPH</button>
+  <div class="mode-sep"></div>
+  <button class="mode-btn" id="btn-system" onclick="setMode('system')">◉ SYSTEM MAP</button>
+</div>
+
+<!-- Filter bar (skill graph only) -->
+<div class="map-filter-bar" id="filter-bar" style="top:108px">
+  <button class="filter-btn active-all" data-filter="all" onclick="setFilter('all',this)">ВСЕ</button>
+  <div class="filter-sep"></div>
+  <button class="filter-btn" data-filter="core"      onclick="setFilter('core',this)">⬡ CORE</button>
+  <button class="filter-btn" data-filter="practical" onclick="setFilter('practical',this)">▭ ПРАКТИКА</button>
+  <button class="filter-btn" data-filter="incident"  onclick="setFilter('incident',this)">◈ ИНЦИДЕНТЫ</button>
+</div>
+
+<!-- Legend -->
+<div class="map-legend">
+  <div class="legend-title">Статус</div>
+  <div class="legend-item"><div class="legend-dot ld-locked"></div>Заблокировано</div>
+  <div class="legend-item"><div class="legend-dot ld-available"></div>Доступно</div>
+  <div class="legend-item"><div class="legend-dot ld-progress"></div>В процессе</div>
+  <div class="legend-item"><div class="legend-dot ld-done"></div>Завершено</div>
+  <div style="height:1px;background:rgba(255,255,255,.06);margin:6px 0"></div>
+  <div class="legend-title">Тип узла</div>
+  <div class="legend-type-row"><div class="legend-shape"><div class="ls-hex"></div></div>Core skill</div>
+  <div class="legend-type-row"><div class="legend-shape"><div class="ls-rect"></div></div>Практика</div>
+  <div class="legend-type-row"><div class="legend-shape"><div class="ls-diamond"></div></div>Инцидент</div>
+</div>
+
+<!-- Map -->
+<div id="map-wrap">
+  <div id="map-stage">
+    <svg id="edges-svg"></svg>
+    <!-- Nodes injected by JS -->
+  </div>
+</div>
+
+<!-- Tooltip -->
+<div id="tooltip"></div>
+
+<!-- Side Panel -->
+<div id="side-panel">
+  <button class="panel-close" onclick="closePanel()">✕</button>
+  <div id="panel-content"></div>
+</div>
+
+<!-- Stats -->
+<div class="map-stats">
+  <div class="stat-item">
+    <div class="stat-n" id="stat-done">0</div>
+    <div class="stat-l">Освоено</div>
+  </div>
+  <div class="stat-divider"></div>
+  <div class="stat-item">
+    <div class="stat-n" id="stat-progress">0</div>
+    <div class="stat-l">В процессе</div>
+  </div>
+  <div class="stat-divider"></div>
+  <div class="stat-item">
+    <div class="stat-n" id="stat-pct">0%</div>
+    <div class="stat-l">Прогресс</div>
+  </div>
+  <div class="stat-divider"></div>
+  <div class="stat-item" style="cursor:pointer" onclick="setFilter('core', document.querySelector('[data-filter=core]'))" title="Показать только core skills">
+    <div class="stat-n" style="color:#38BDF8" id="stat-core">0</div>
+    <div class="stat-l">Core</div>
+  </div>
+  <div class="stat-item" style="cursor:pointer" onclick="setFilter('practical', document.querySelector('[data-filter=practical]'))" title="Показать практические навыки">
+    <div class="stat-n" style="color:#34D399" id="stat-practical">0</div>
+    <div class="stat-l">Практика</div>
+  </div>
+  <div class="stat-item" style="cursor:pointer" onclick="setFilter('incident', document.querySelector('[data-filter=incident]'))" title="Показать инциденты">
+    <div class="stat-n" style="color:#EF4444" id="stat-incidents">0</div>
+    <div class="stat-l">Инциденты</div>
+  </div>
+  <div class="stat-divider"></div>
+  <div class="stat-item">
+    <div class="stat-n" style="font-size:8px;letter-spacing:.1em;color:rgba(148,163,184,.4)" id="stat-context">SKILL GRAPH</div>
+    <div class="stat-l">Режим</div>
+  </div>
+</div>
+
+<script src="js/data.js"></script>
+<script src="js/systemmap.js"></script>
+<script>
+// ─────────────────────────────────────────
+//  NODE DATA
+// ─────────────────────────────────────────
+const NODES = [
+  // FOUNDATIONS ─────────────────────────
+  {
+    id:'linux', type:'core', group:'linux', label:'Linux', emoji:'🐧', size:'lg',
+    x:600, y:120,
+    title:'Linux',
+    desc:'Операционная система основа DevOps стека. Всё работает на Linux — серверы, контейнеры, K8s ноды.',
+    why:'Без понимания Linux невозможно дебажить контейнеры, настраивать сети, читать логи в production.',
+    sprints:['S01','S02','S03'],
+    sprintIds:[1,2,3],
+    prereqs:[],
+    unlocks:['networking','git','docker'],
+    interview:'Объясни разницу между процессом и потоком. Что такое inode? Как работает systemd?',
+    example:'Настрой systemd service с timer, создай system user без shell, диагностируй load average'
+  },
+  {
+    id:'git', type:'core', group:'linux', label:'Git', emoji:'⎇', size:'sm',
+    x:780, y:120,
+    title:'Git & Version Control',
+    desc:'Распределённая система контроля версий. Основа любого CI/CD и командной работы.',
+    why:'Git flow, branch strategies, PR review — ежедневный инструмент DevOps инженера.',
+    sprints:['S01'],
+    sprintIds:[1],
+    prereqs:['linux'],
+    unlocks:['cicd'],
+    interview:'Объясни разницу git merge vs rebase. Что такое detached HEAD?',
+    example:'Настрой branch protection rules, создай multi-branch CI pipeline'
+  },
+  {
+    id:'terminal', type:'core', group:'linux', label:'Terminal', emoji:'⌨', size:'sm',
+    x:420, y:120,
+    title:'Terminal & Shell',
+    desc:'Bash скрипты, pipes, redirects, process management. Язык командной строки.',
+    why:'Shell scripting — основа автоматизации, healthcheck скриптов, deployment hooks.',
+    sprints:['S01','S02'],
+    sprintIds:[1,2],
+    prereqs:['linux'],
+    unlocks:['docker'],
+    interview:'Напиши скрипт который мониторит disk usage и пишет в syslog при >80%.',
+    example:'Напиши disk_monitor.sh с logger, добавь в cron'
+  },
+
+  // NETWORKING ──────────────────────────
+  {
+    id:'networking', type:'core', group:'net', label:'Networking', emoji:'🌐', size:'lg',
+    x:600, y:260,
+    title:'Networking',
+    desc:'TCP/IP, DNS, HTTP/HTTPS, iptables, сетевые пространства имён.',
+    why:'Container networking, K8s service discovery, debugging недоступных сервисов — всё это сеть.',
+    sprints:['S04'],
+    sprintIds:[4],
+    prereqs:['linux'],
+    unlocks:['docker','terraform'],
+    interview:'Объясni разницу между DROP и REJECT в iptables. Что происходит при MTU mismatch?',
+    example:'Воспроизведи 5 сетевых поломок: DNS, iptables, маршрут, MTU, /etc/hosts'
+  },
+  {
+    id:'dns', type:'core', group:'net', label:'DNS', emoji:'📡', size:'sm',
+    x:440, y:260,
+    title:'DNS',
+    desc:'Domain Name System — резолвинг имён в IP-адреса. resolv.conf, A/CNAME/MX записи.',
+    why:'DNS проблемы — самая частая причина "мистических" production инцидентов.',
+    sprints:['S04'],
+    sprintIds:[4],
+    prereqs:['networking'],
+    unlocks:['k8s-dns'],
+    interview:'Как диагностировать DNS проблему внутри K8s пода?',
+    example:'Намеренно сломай DNS через resolv.conf, диагностируй через dig/nslookup'
+  },
+  {
+    id:'loadbalancing', type:'core', group:'net', label:'Load Balancing', emoji:'⚖', size:'sm',
+    x:760, y:260,
+    title:'Load Balancing',
+    desc:'Распределение трафика: L4 (TCP) vs L7 (HTTP). Healthchecks, sticky sessions.',
+    why:'ALB в AWS, Ingress в K8s, Nginx — везде та же концепция, разные реализации.',
+    sprints:['S04','S14'],
+    sprintIds:[4,14],
+    prereqs:['networking'],
+    unlocks:['aws','k8s-ingress'],
+    interview:'Чем отличается L4 от L7 load balancing? Когда используешь каждый?',
+    example:'Настрой ALB с health check rules, target groups, listener rules'
+  },
+
+  // DOCKER ──────────────────────────────
+  {
+    id:'docker', type:'core', group:'docker', label:'Docker', emoji:'🐳', size:'lg',
+    x:600, y:420,
+    title:'Docker',
+    desc:'Платформа контейнеризации. Изоляция процессов, образы, networking, volumes.',
+    why:'Основа современного DevOps delivery. Без Docker нет K8s, нет CI/CD на контейнерах.',
+    sprints:['S05','S06','S07'],
+    sprintIds:[5,6,7],
+    prereqs:['linux','networking'],
+    unlocks:['cicd','k8s'],
+    interview:'Объясни image vs container. CMD vs ENTRYPOINT. Как работает layer cache?',
+    example:'Failure-first: Dockerfile с тремя скрытыми ошибками — найди только по build логам'
+  },
+  {
+    id:'dockerfile', type:'practical', group:'docker', label:'Dockerfile', emoji:'📋', size:'sm',
+    x:420, y:420,
+    title:'Dockerfile & Images',
+    desc:'Многослойные образы, layer caching, multi-stage builds, .dockerignore.',
+    why:'Плохой Dockerfile = медленный CI, большие образы, security уязвимости.',
+    sprints:['S05','S06'],
+    sprintIds:[5,6],
+    prereqs:['docker'],
+    unlocks:['cicd'],
+    interview:'Что такое multi-stage build и зачем? Как оптимизировать размер образа?',
+    example:'Multi-stage build: сборка Go бинарника в builder, копирование в scratch image'
+  },
+  {
+    id:'compose', type:'practical', group:'docker', label:'Compose', emoji:'🔧', size:'sm',
+    x:780, y:420,
+    title:'Docker Compose',
+    desc:'Оркестрация нескольких контейнеров локально. Сети, volumes, depends_on.',
+    why:'Local dev environment, интеграционные тесты, быстрый запуск стека для демо.',
+    sprints:['S07','S08'],
+    sprintIds:[7,8],
+    prereqs:['docker'],
+    unlocks:['cicd'],
+    interview:'Как настроить healthcheck в compose и depends_on condition: service_healthy?',
+    example:'Подними app + postgres + redis через compose с healthchecks и named volumes'
+  },
+
+  // CI/CD ───────────────────────────────
+  {
+    id:'cicd', type:'core', group:'cicd', label:'CI/CD', emoji:'⚙', size:'lg',
+    x:600, y:580,
+    title:'CI/CD Pipelines',
+    desc:'Непрерывная интеграция и доставка. Build → Test → Deploy автоматизация.',
+    why:'Скорость доставки изменений с контролем качества — основная функция DevOps.',
+    sprints:['S08','S09'],
+    sprintIds:[8,9],
+    prereqs:['docker','git'],
+    unlocks:['terraform','k8s'],
+    interview:'Failure-first: pipeline зелёный но деплой не произошёл. Три скрытые ошибки — найди.',
+    example:'Build → test → push to ECR → deploy to ECS с environment protection rules'
+  },
+  {
+    id:'gh-actions', type:'practical', group:'cicd', label:'GitHub Actions', emoji:'🤖', size:'sm',
+    x:430, y:580,
+    title:'GitHub Actions',
+    desc:'Workflow engine встроенный в GitHub. Jobs, steps, secrets, environments, reusable workflows.',
+    why:'Стандарт для open-source и большинства стартапов. Глубокая интеграция с GitHub экосистемой.',
+    sprints:['S08','S09'],
+    sprintIds:[8,9],
+    prereqs:['cicd','git'],
+    unlocks:['terraform'],
+    interview:'Объясни зачем нужны GitHub Environments с protection rules. Что без них?',
+    example:'Создай reusable workflow для build/push Docker image с matrix strategy'
+  },
+  {
+    id:'rollback', type:'practical', group:'cicd', label:'Rollbacks', emoji:'↩', size:'sm',
+    x:770, y:580,
+    title:'Rollback Strategy',
+    desc:'Стратегии отката: blue/green, canary, feature flags. Helm rollback, pipeline revert.',
+    why:'Production деплой без стратегии отката = одна ошибка = downtime.',
+    sprints:['S09','S18'],
+    sprintIds:[9,18],
+    prereqs:['cicd'],
+    unlocks:['k8s'],
+    interview:'Опиши процесс emergency rollback если новая версия сломала production.',
+    example:'helm rollback myapp 1 — откат к предыдущей ревизии за 30 секунд'
+  },
+
+  // TERRAFORM ───────────────────────────
+  {
+    id:'terraform', type:'core', group:'tf', label:'Terraform', emoji:'🏗', size:'lg',
+    x:600, y:740,
+    title:'Terraform',
+    desc:'Infrastructure as Code. Декларативное описание инфраструктуры, state management.',
+    why:'Воспроизводимая инфраструктура — основа DevOps. Terraform = промышленный стандарт IaC.',
+    sprints:['S10','S11','S12'],
+    sprintIds:[10,11,12],
+    prereqs:['networking','cicd'],
+    unlocks:['aws'],
+    interview:'Blast radius check: что делаешь перед каждым terraform apply?',
+    example:'terraform plan -out=tfplan && terraform show tfplan — проверь изменения до apply'
+  },
+  {
+    id:'tf-modules', type:'practical', group:'tf', label:'TF Modules', emoji:'📦', size:'sm',
+    x:430, y:740,
+    title:'Terraform Modules',
+    desc:'Переиспользуемые блоки инфраструктуры. Input/output variables, module composition.',
+    why:'DRY инфраструктура. Модуль VPC пишешь один раз, используешь в dev/staging/prod.',
+    sprints:['S11'],
+    sprintIds:[11],
+    prereqs:['terraform'],
+    unlocks:['aws'],
+    interview:'Infrastructure reading: получи чужой модуль, найди заложенную ошибку без запуска.',
+    example:'Напиши модуль vpc с input переменными и output значениями, используй в 2 окружениях'
+  },
+  {
+    id:'tf-state', type:'practical', group:'tf', label:'Remote State', emoji:'🗄', size:'sm',
+    x:770, y:740,
+    title:'Terraform Remote State',
+    desc:'S3 backend + DynamoDB locking. State sharing между командами и pipelines.',
+    why:'Distributed lock предотвращает конфликты при параллельных apply в команде.',
+    sprints:['S10','S12'],
+    sprintIds:[10,12],
+    prereqs:['terraform'],
+    unlocks:['aws'],
+    interview:'Почему force-unlock опасен? Что произойдёт при двух одновременных apply без lock?',
+    example:'Настрой S3 backend с DynamoDB lock table, отработай force-unlock сценарий'
+  },
+
+  // AWS ─────────────────────────────────
+  {
+    id:'aws', type:'core', group:'aws', label:'AWS', emoji:'☁', size:'lg',
+    x:600, y:900,
+    title:'Amazon Web Services',
+    desc:'Облачная платформа. VPC, IAM, EC2, ECS, RDS, S3, CloudWatch — production стек.',
+    why:'AWS — крупнейший cloud provider. SAA сертификат = сигнал работодателю.',
+    sprints:['S13','S14','S15'],
+    sprintIds:[13,14,15],
+    prereqs:['terraform','networking'],
+    unlocks:['k8s'],
+    interview:'Cost engineering: посчитай стоимость архитектуры и предложи оптимизацию на >20%.',
+    example:'Построй VPC 2AZ + ALB → ASG + S3 + CloudWatch dashboard полностью через Terraform'
+  },
+  {
+    id:'iam', type:'practical', group:'aws', label:'IAM', emoji:'🔐', size:'sm',
+    x:440, y:900,
+    title:'AWS IAM',
+    desc:'Identity and Access Management. Roles, policies, least privilege, instance profiles.',
+    why:'Неправильный IAM = security breach. Каждый ресурс в AWS должен иметь минимальные права.',
+    sprints:['S13'],
+    sprintIds:[13],
+    prereqs:['aws'],
+    unlocks:['aws'],
+    interview:'Объясни разницу между IAM Role и IAM User. Когда используешь instance profile?',
+    example:'Создай IAM role для ECS task с least-privilege policy, проверь через IAM Policy Simulator'
+  },
+  {
+    id:'vpc', type:'practical', group:'aws', label:'VPC', emoji:'🏛', size:'sm',
+    x:760, y:900,
+    title:'AWS VPC',
+    desc:'Virtual Private Cloud. Subnets, route tables, NAT Gateway, security groups, NACLs.',
+    why:'VPC — фундамент AWS архитектуры. Без понимания VPC нельзя проектировать production сети.',
+    sprints:['S13','S14'],
+    sprintIds:[13,14],
+    prereqs:['networking','aws'],
+    unlocks:['k8s'],
+    interview:'Чем отличается Security Group от NACL? Когда NAT Instance лучше NAT Gateway?',
+    example:'VPC 2AZ: public subnets с ALB, private subnets с EC2, NAT Gateway для outbound'
+  },
+
+  // KUBERNETES ──────────────────────────
+  {
+    id:'k8s', type:'core', group:'k8s', label:'Kubernetes', emoji:'⎈', size:'lg',
+    x:600, y:1080,
+    title:'Kubernetes',
+    desc:'Container orchestration. Declarative deployments, self-healing, scaling.',
+    why:'K8s стал стандартом для production контейнеров. CKA открывает двери в platform engineering.',
+    sprints:['S17','S18','S19','S20','S21'],
+    sprintIds:[17,18,19,20,21],
+    prereqs:['docker','aws'],
+    unlocks:['observability','ops'],
+    interview:'Mental model: Pod = единица планировщика. Почему kubectl delete pod не удаляет приложение?',
+    example:'Добавь readinessProbe, намеренно сломай — наблюдай rolling update. Почини.'
+  },
+  {
+    id:'k8s-deploy', type:'practical', group:'k8s', label:'Deployments', emoji:'🚀', size:'sm',
+    x:430, y:1060,
+    title:'Deployments & Services',
+    desc:'Declarative replica management, rolling updates, Services (ClusterIP/NodePort/LB), Ingress.',
+    why:'Deployment + Service = базовый K8s паттерн. Знаешь его — можешь деплоить в любой кластер.',
+    sprints:['S17'],
+    sprintIds:[17],
+    prereqs:['k8s'],
+    unlocks:['k8s-storage','helm'],
+    interview:'Нарисуй ASCII диаграмму трафика от клиента до Pod через LoadBalancer Service.',
+    example:'Deployment с 3 репликами + HPA + readiness/liveness probe + RollingUpdate strategy'
+  },
+  {
+    id:'k8s-storage', type:'practical', group:'k8s', label:'Storage', emoji:'💾', size:'sm',
+    x:770, y:1060,
+    title:'Storage & StatefulSets',
+    desc:'PV/PVC/StorageClass, StatefulSets для stateful приложений, headless Services.',
+    why:'Базы данных в K8s требуют StatefulSet. PVC — стандарт persistent storage.',
+    sprints:['S18'],
+    sprintIds:[18],
+    prereqs:['k8s-deploy'],
+    unlocks:['helm'],
+    interview:'Чем StatefulSet отличается от Deployment? Когда что использовать?',
+    example:'StatefulSet postgres с volumeClaimTemplates (10Gi), headless Service, данные живут после delete pod'
+  },
+  {
+    id:'helm', type:'practical', group:'k8s', label:'Helm', emoji:'⎗', size:'sm',
+    x:430, y:1110,
+    title:'Helm',
+    desc:'Package manager для Kubernetes. Chart templates, values.yaml, release management.',
+    why:'helm install kube-prometheus-stack — один командой поднимает весь observability стек.',
+    sprints:['S18'],
+    sprintIds:[18],
+    prereqs:['k8s-deploy'],
+    unlocks:['observability'],
+    interview:'Объясни lifecycle: helm install → upgrade → rollback. Что такое hook?',
+    example:'Создай собственный chart для myapp с values.yaml, сделай rollback к предыдущей ревизии'
+  },
+  {
+    id:'k8s-dns', type:'practical', group:'k8s', label:'K8s DNS', emoji:'🔍', size:'sm',
+    x:770, y:1110,
+    title:'Kubernetes DNS',
+    desc:'CoreDNS в кластере. Service discovery через DNS имена: svc.namespace.svc.cluster.local.',
+    why:'DNS fails in pod — один из топ-5 K8s инцидентов. Нужно знать как диагностировать.',
+    sprints:['S19','S20'],
+    sprintIds:[19,20],
+    prereqs:['k8s','dns'],
+    unlocks:['ops'],
+    interview:'Как диагностировать DNS resolution failure внутри пода? Какие команды?',
+    example:'kubectl exec -it pod -- nslookup kubernetes.default; kubectl logs -n kube-system CoreDNS'
+  },
+  {
+    id:'k8s-ingress', type:'practical', group:'k8s', label:'Ingress', emoji:'🚦', size:'sm',
+    x:600, y:1150,
+    title:'Ingress',
+    desc:'L7 routing в K8s. Nginx/Traefik Ingress Controller, TLS termination, path routing.',
+    why:'Без Ingress каждый сервис требует отдельного LoadBalancer = лишние расходы на AWS.',
+    sprints:['S17'],
+    sprintIds:[17],
+    prereqs:['k8s-deploy','loadbalancing'],
+    unlocks:['observability'],
+    interview:'Чем Ingress отличается от Service типа LoadBalancer? В чём экономический смысл?',
+    example:'Nginx Ingress с TLS сертификатом, path routing /app → svc-a, /api → svc-b'
+  },
+
+  // OBSERVABILITY ───────────────────────
+  {
+    id:'observability', type:'core', group:'obs', label:'Observability', emoji:'📊', size:'lg',
+    x:600, y:1330,
+    title:'Observability Stack',
+    desc:'Prometheus + Grafana + Loki + Alertmanager. Метрики, логи, алерты.',
+    why:'Без observability production — это чёрный ящик. Нельзя чинить то что нельзя наблюдать.',
+    sprints:['S19'],
+    sprintIds:[19],
+    prereqs:['k8s','helm'],
+    unlocks:['ops'],
+    interview:'Объясни pull vs push модель Prometheus. Какие проблемы при scraping за NAT?',
+    example:'kube-prometheus-stack через Helm, собственный дашборд 4 панели, 5 alert rules'
+  },
+  {
+    id:'prometheus', type:'core', group:'obs', label:'Prometheus', emoji:'🔥', size:'sm',
+    x:440, y:1320,
+    title:'Prometheus',
+    desc:'Time-series база метрик с pull моделью. PromQL запросы, scrape configs, rules.',
+    why:'De facto стандарт мониторинга в K8s экосистеме. PromQL нужен на любом K8s интервью.',
+    sprints:['S19'],
+    sprintIds:[19],
+    prereqs:['observability'],
+    unlocks:['grafana'],
+    interview:'rate() vs irate() — когда что использовать? Что такое histogram_quantile?',
+    example:'PromQL: rate(container_cpu_usage_seconds_total[5m]), histogram_quantile(0.99, ...)'
+  },
+  {
+    id:'grafana', type:'practical', group:'obs', label:'Grafana', emoji:'📈', size:'sm',
+    x:760, y:1320,
+    title:'Grafana',
+    desc:'Визуализация метрик и логов. Дашборды, переменные, панели, data sources.',
+    why:'Grafana = интерфейс через который команда видит состояние системы в реальном времени.',
+    sprints:['S19'],
+    sprintIds:[19],
+    prereqs:['prometheus'],
+    unlocks:['alerting'],
+    interview:'Как создать дашборд который показывает error rate, latency p99, pod restarts?',
+    example:'Создай дашборд: CPU by pod (топ-10), Memory, HTTP rate, Error rate — 4 панели'
+  },
+  {
+    id:'loki', type:'practical', group:'obs', label:'Loki', emoji:'📋', size:'sm',
+    x:440, y:1380,
+    title:'Loki + Promtail',
+    desc:'Лог агрегация для K8s. Promtail DaemonSet собирает логи, LogQL для поиска.',
+    why:'Без централизованных логов — kubectl logs на каждой ноде. Loki = нормальный поиск по логам.',
+    sprints:['S19'],
+    sprintIds:[19],
+    prereqs:['observability'],
+    unlocks:['alerting'],
+    interview:'Напиши LogQL запрос для фильтрации ERROR логов из namespace default.',
+    example:'{namespace="default"} |= "ERROR" | json | level="error"'
+  },
+  {
+    id:'alerting', type:'practical', group:'obs', label:'Alerting', emoji:'🔔', size:'sm',
+    x:760, y:1380,
+    title:'Alertmanager',
+    desc:'Routing и deduplication алертов. PrometheusRule CRD, receivers, silences.',
+    why:'Правильный алертинг = ты узнаёшь о проблеме до пользователя, а не от него.',
+    sprints:['S19'],
+    sprintIds:[19],
+    prereqs:['prometheus','grafana'],
+    unlocks:['ops'],
+    interview:'Напиши alert rule для PodCrashLooping с правильным threshold и routing.',
+    example:'5 alert rules: PodCrashLooping, NodeMemoryHigh, OOMKilled → Telegram routing'
+  },
+
+  // OPS ─────────────────────────────────
+  {
+    id:'ops', type:'core', group:'ops', label:'Ops Thinking', emoji:'🧠', size:'lg',
+    x:600, y:1540,
+    title:'Operational Thinking',
+    desc:'Debugging workflows, incident reasoning, blast radius, production mindset.',
+    why:'Инструменты можно выучить за месяц. Operational мышление формируется годами — или через правильные упражнения.',
+    sprints:['S20','S21'],
+    sprintIds:[20,21],
+    prereqs:['observability','k8s'],
+    unlocks:[],
+    interview:'STAR: расскажи об инциденте который ты вызвал. Что сделал, как починил.',
+    example:'10 K8s troubleshooting сценариев: симптом → диагностика → причина → fix → верификация'
+  },
+  {
+    id:'troubleshoot', type:'practical', group:'ops', label:'Troubleshooting', emoji:'🔬', size:'sm',
+    x:430, y:1540,
+    title:'Troubleshooting Workflows',
+    desc:'Систематическая диагностика: от симптома к причине. curl → logs → describe → netstat.',
+    why:'Debugging без системы = случайные попытки. Система = решение за минуты, а не часы.',
+    sprints:['S04','S19','S20'],
+    sprintIds:[4,19,20],
+    prereqs:['ops'],
+    unlocks:[],
+    interview:'🎯 CrashLoopBackOff: порядок диагностики. Pod Pending: что проверяешь первым?',
+    example:'kubectl describe pod → Events → kubectl logs --previous → kubectl get events'
+  },
+  {
+    id:'cost-eng', type:'practical', group:'ops', label:'Cost Aware', emoji:'💰', size:'sm',
+    x:770, y:1540,
+    title:'Cost-Aware Engineering',
+    desc:'AWS Cost Calculator, ресурсные limits, NAT Gateway vs NAT Instance, Spot instances.',
+    why:'Junior DevOps без cost awareness = неожиданный счёт на $500. Понимание стоимости = зрелость.',
+    sprints:['S14','S15'],
+    sprintIds:[14,15],
+    prereqs:['aws'],
+    unlocks:[],
+    interview:'Как снизить стоимость архитектуры на 20% без потери доступности? Назови три варианта.',
+    example:'NAT Gateway ~$32/мес: замени на NAT Instance для dev → экономия ~$25/мес'
+  },
+
+  // ── INCIDENT NODES ──────────────────────
+  {
+    id:'inc-crashloop', type:'incident', group:'k8s', label:'CrashLoopBackOff', emoji:'💥', size:'sm',
+    x:530, y:1220,
+    title:'CrashLoopBackOff',
+    desc:'Под постоянно перезапускается. Контейнер стартует и падает — K8s повторяет попытки с экспоненциальной задержкой.',
+    why:'Один из топ-3 K8s инцидентов на production. Уметь диагностировать за < 5 минут — must-have.',
+    sprints:['S20'],
+    sprintIds:[20],
+    prereqs:['k8s-deploy'],
+    unlocks:['troubleshoot'],
+    interview:'Порядок диагностики CrashLoopBackOff: что запускаешь первым и почему?',
+    example:'kubectl logs --previous pod → kubectl describe pod → Events → check OOMKilled vs exit code'
+  },
+  {
+    id:'inc-tf-lock', type:'incident', group:'tf', label:'TF State Lock', emoji:'🔒', size:'sm',
+    x:530, y:800,
+    title:'Terraform State Lock',
+    desc:'terraform apply зависает: "Error acquiring the state lock". DynamoDB запись не освобождена после предыдущего запуска.',
+    why:'Происходит при CI/CD cancel или network failure. Неправильный force-unlock в команде = конфликт стейта.',
+    sprints:['S12'],
+    sprintIds:[12],
+    prereqs:['tf-state'],
+    unlocks:['ops'],
+    interview:'Когда force-unlock безопасен? Что проверишь перед выполнением?',
+    example:'terraform force-unlock LOCK_ID — только убедившись что других apply нет'
+  },
+  {
+    id:'inc-broken-pipe', type:'incident', group:'cicd', label:'Broken Pipeline', emoji:'⛔', size:'sm',
+    x:530, y:640,
+    title:'Broken CI Pipeline',
+    desc:'Pipeline зелёный, но деплой не произошёл. Три скрытые ошибки в одном workflow файле.',
+    why:'Зелёный pipeline ≠ успешный деплой. Нужно уметь читать логи и находить silent failures.',
+    sprints:['S09'],
+    sprintIds:[9],
+    prereqs:['gh-actions'],
+    unlocks:['troubleshoot'],
+    interview:'GitHub Actions: как отлаживать pipeline который не делает то что должен делать?',
+    example:'(1) missing Environment secret, (2) отсутствует needs:, (3) неверный github.ref формат'
+  },
+  {
+    id:'inc-pod-pending', type:'incident', group:'k8s', label:'Pod Pending', emoji:'⏳', size:'sm',
+    x:670, y:1220,
+    title:'Pod Pending — Not Scheduled',
+    desc:'Pod застрял в Pending. Scheduler не может разместить под: нехватка ресурсов, taint/toleration, node selector.',
+    why:'Resource limits без requests = pending pods в production под нагрузкой. Частая ошибка джунов.',
+    sprints:['S20'],
+    sprintIds:[20],
+    prereqs:['k8s-deploy'],
+    unlocks:['troubleshoot'],
+    interview:'Pod Pending: что проверяешь первым — kubectl describe или kubectl get nodes?',
+    example:'kubectl describe pod → Events: "0/3 nodes available: 3 Insufficient memory" → fix requests/limits'
+  },
+
+  // ── PRACTICAL SKILL NODES ────────────────
+  {
+    id:'skill-dockerfile', type:'practical', group:'docker', label:'Write Dockerfile', emoji:'✍', size:'sm',
+    x:345, y:475,
+    title:'Write Production Dockerfile',
+    desc:'Multi-stage builds, layer caching, non-root user, .dockerignore, SIGTERM handling.',
+    why:'Плохой Dockerfile = медленный CI (нет кэша), большой образ, security issues в production.',
+    sprints:['S06'],
+    sprintIds:[6],
+    prereqs:['docker'],
+    unlocks:['cicd'],
+    interview:'Напиши Dockerfile для Python Flask приложения с multi-stage build и non-root user.',
+    example:'FROM python:3.11-slim AS builder → ... → FROM python:3.11-slim; COPY --from=builder'
+  },
+  {
+    id:'skill-tf-plan', type:'practical', group:'tf', label:'Blast Radius Check', emoji:'🎯', size:'sm',
+    x:345, y:795,
+    title:'Blast Radius Check Before Apply',
+    desc:'terraform plan -out=tfplan → terraform show tfplan → читаешь изменения как текст перед apply.',
+    why:'terraform apply без plan review = изменения которые ты не ожидал. Один destroy в prod = incident.',
+    sprints:['S12'],
+    sprintIds:[12],
+    prereqs:['terraform'],
+    unlocks:['aws'],
+    interview:'Что именно читаешь в terraform plan output? Какие символы означают destroy?',
+    example:'~ = update, - = destroy, + = create. Красный - перед ресурсом = downtime risk'
+  },
+  {
+    id:'skill-debug-k8s', type:'practical', group:'k8s', label:'Debug K8s Pod', emoji:'🔍', size:'sm',
+    x:345, y:1175,
+    title:'Systematic K8s Debugging',
+    desc:'curl → kubectl get events → kubectl describe → kubectl logs --previous → kubectl exec',
+    why:'Случайные попытки = часы. Система диагностики = минуты. Нужна до первого production инцидента.',
+    sprints:['S20'],
+    sprintIds:[20],
+    prereqs:['k8s-deploy'],
+    unlocks:['troubleshoot'],
+    interview:'Опиши свой debugging workflow для pod который не отвечает на запросы.',
+    example:'Step 1: curl svc → Step 2: describe pod Events → Step 3: logs --previous → Step 4: exec -it sh'
+  },
+];
+
+// ─────────────────────────────────────────
+//  EDGES (dependency connections)
+// ─────────────────────────────────────────
+const EDGES = [
+  // Foundations
+  ['linux','networking'],['linux','git'],['linux','terminal'],
+  ['linux','docker'],
+  // Net
+  ['networking','docker'],['networking','terraform'],
+  ['dns','k8s-dns'],['loadbalancing','k8s-ingress'],
+  // Docker
+  ['docker','cicd'],['docker','k8s'],
+  ['dockerfile','cicd'],['compose','cicd'],
+  // Git
+  ['git','cicd'],
+  // CI/CD
+  ['cicd','terraform'],['cicd','k8s'],
+  ['gh-actions','terraform'],['rollback','k8s'],
+  // Terraform
+  ['terraform','aws'],['tf-modules','aws'],['tf-state','aws'],
+  // AWS
+  ['aws','k8s'],['iam','aws'],['vpc','k8s'],
+  // K8s
+  ['k8s','observability'],['k8s','ops'],
+  ['k8s-deploy','k8s-storage'],['k8s-deploy','helm'],
+  ['k8s-storage','helm'],['helm','observability'],
+  ['k8s-dns','ops'],['k8s-ingress','observability'],
+  // Observability
+  ['observability','ops'],
+  ['prometheus','grafana'],['prometheus','alerting'],
+  ['grafana','alerting'],['loki','alerting'],
+  // Ops
+  ['troubleshoot','ops'],['cost-eng','ops'],
+  ['alerting','ops'],
+  // Incident nodes
+  ['k8s-deploy','inc-crashloop'],['inc-crashloop','troubleshoot'],
+  ['tf-state','inc-tf-lock'],['inc-tf-lock','ops'],
+  ['gh-actions','inc-broken-pipe'],['inc-broken-pipe','troubleshoot'],
+  ['k8s-deploy','inc-pod-pending'],['inc-pod-pending','troubleshoot'],
+  // Practical skill nodes
+  ['docker','skill-dockerfile'],['skill-dockerfile','cicd'],
+  ['terraform','skill-tf-plan'],['skill-tf-plan','aws'],
+  ['k8s-deploy','skill-debug-k8s'],['skill-debug-k8s','troubleshoot'],
+];
+
+// ─────────────────────────────────────────
+//  STATUS from localStorage
+// ─────────────────────────────────────────
+function getNodeStatus(node) {
+  // Map sprint IDs to localStorage progress
+  if (!node.sprintIds || node.sprintIds.length === 0) return 'available';
+
+  let totalTasks = 0, doneTasks = 0, anyProgress = false;
+
+  node.sprintIds.forEach(sid => {
+    const sprintData = SPRINTS ? SPRINTS.find(s => s.id === sid) : null;
+    if (!sprintData) return;
+
+    const sprintTasks = sprintData.instructions ? sprintData.instructions.length : 0;
+    const doneArr = JSON.parse(localStorage.getItem('sp-done-' + sid) || '[]');
+    const topicsArr = JSON.parse(localStorage.getItem('sp-top-' + sid) || '[]');
+
+    totalTasks += sprintTasks;
+    doneTasks += doneArr.length;
+    if (doneArr.length > 0 || topicsArr.length > 0) anyProgress = true;
+  });
+
+  if (totalTasks === 0) return 'available';
+  if (doneTasks >= totalTasks * 0.9) return 'done';
+  if (anyProgress || doneTasks > 0) return 'progress';
+
+  // Check prerequisites
+  const prereqs = node.prereqs || [];
+  for (const preId of prereqs) {
+    const preNode = NODES.find(n => n.id === preId);
+    if (preNode) {
+      const preStatus = getNodeStatusById(preId);
+      if (preStatus === 'locked') return 'locked';
+    }
+  }
+  return 'available';
+}
+
+const statusCache = {};
+function getNodeStatusById(id) {
+  if (statusCache[id] !== undefined) return statusCache[id];
+  const node = NODES.find(n => n.id === id);
+  if (!node) return 'available';
+  // Avoid infinite recursion
+  statusCache[id] = 'available';
+  const s = getNodeStatus(node);
+  statusCache[id] = s;
+  return s;
+}
+
+// ─────────────────────────────────────────
+//  RENDER ENGINE  (dataset-agnostic)
+// ─────────────────────────────────────────
+const stage = document.getElementById('map-stage');
+const svgEl = document.getElementById('edges-svg');
+
+// Group / layer color lookup — covers both skill groups and system layers
+const GROUP_COLORS = {
+  linux:'#38BDF8', net:'#818CF8', docker:'#60A5FA',
+  cicd:'#34D399', tf:'#A78BFA', aws:'#FB923C',
+  k8s:'#F87171', obs:'#FFC443', ops:'#C084FC',
+  // system layers
+  source:'#38BDF8', delivery:'#34D399', platform:'#A78BFA',
+  runtime:'#F87171', observability:'#FFC443',
+};
+const GROUP_LABELS = {
+  linux:'Foundations', net:'Networking', docker:'Containers',
+  cicd:'CI/CD', tf:'Infrastructure', aws:'Cloud',
+  k8s:'Kubernetes', obs:'Observability', ops:'Operations',
+  source:'Source', delivery:'Delivery', platform:'Platform',
+  runtime:'Runtime', observability:'Observability',
+};
+
+// ── Active dataset (swapped by setMode) ──
+let activeNodes = NODES;
+let activeEdges = EDGES;
+let activeMode  = localStorage.getItem('rdm-map-mode') || 'skill';
+
+// Render edges
+function renderEdges(highlightId = null, typeFilter = null) {
+  svgEl.innerHTML = '';
+
+  // Add glow filter
+  const defs = document.createElementNS('http://www.w3.org/2000/svg','defs');
+  defs.innerHTML = `
+    <filter id="glow">
+      <feGaussianBlur stdDeviation="2" result="coloredBlur"/>
+      <feMerge><feMergeNode in="coloredBlur"/><feMergeNode in="SourceGraphic"/></feMerge>
+    </filter>`;
+  svgEl.appendChild(defs);
+
+  const nodeMap = {};
+  activeNodes.forEach(n => { nodeMap[n.id] = n; });
+
+  const highlightEdges = new Set();
+  if (highlightId) {
+    activeEdges.forEach(([a,b]) => {
+      if (a === highlightId || b === highlightId) {
+        highlightEdges.add(a + '→' + b);
+      }
+    });
+  }
+
+  activeEdges.forEach(([aId, bId]) => {
+    const a = nodeMap[aId], b = nodeMap[bId];
+    if (!a || !b) return;
+
+    const key = aId + '→' + bId;
+    const isLit = highlightEdges.has(key);
+    const isDim = highlightId && !isLit;
+
+    const path = document.createElementNS('http://www.w3.org/2000/svg','path');
+
+    // Curved bezier path
+    const x1 = a.x, y1 = a.y;
+    const x2 = b.x, y2 = b.y;
+    const cy = (y1 + y2) / 2;
+    const d = `M ${x1} ${y1} C ${x1} ${cy} ${x2} ${cy} ${x2} ${y2}`;
+
+    path.setAttribute('d', d);
+    path.setAttribute('class', 'edge' + (isLit?' lit':'') + (isDim?' dim':''));
+
+    // Dim edges where neither endpoint matches type filter
+    let typeDim = false;
+    if (typeFilter && typeFilter !== 'all') {
+      const aType = a.type || 'core';
+      const bType = b.type || 'core';
+      if (aType !== typeFilter && bType !== typeFilter) typeDim = true;
+    }
+
+    if (isLit) {
+      const color = GROUP_COLORS[a.group] || '#38BDF8';
+      path.style.stroke = color;
+      path.setAttribute('filter','url(#glow)');
+    }
+    if (typeDim) path.style.opacity = '0.03';
+
+    svgEl.appendChild(path);
+  });
+}
+
+// Render nodes
+const nodeEls = {};
+
+// ─────────────────────────────────────────
+//  renderMap — dataset-agnostic render
+// ─────────────────────────────────────────
+function renderMap(nodes, edges) {
+  // Clear existing nodes (keep SVG, remove divs)
+  Array.from(stage.children).forEach(el => {
+    if (el !== svgEl) el.remove();
+  });
+  Object.keys(nodeEls).forEach(k => delete nodeEls[k]);
+
+  // Update stage height
+  const maxY = Math.max(...nodes.map(n => n.y)) + 140;
+  stage.style.minHeight = maxY + 'px';
+  svgEl.style.height    = maxY + 'px';
+
+  // Re-run node render loop (uses activeNodes via closure)
+  activeNodes = nodes;
+  activeEdges = edges;
+
+  nodes.forEach((node, idx) => {
+    const status   = activeMode === 'system' ? 'available' : getNodeStatusById(node.id);
+    const groupKey = node.group || node.layer || 'ops';
+    const color    = GROUP_COLORS[groupKey] || '#38BDF8';
+    const ntype    = node.type || (activeMode === 'system' ? 'system' : 'core');
+
+    const el = document.createElement('div');
+    el.className = `node ${status}${node.size === 'sm' ? ' sm' : ''}`;
+    el.dataset.id    = node.id;
+    el.dataset.group = groupKey;
+    el.dataset.type  = ntype;
+    el.style.left = node.x + 'px';
+    el.style.top  = node.y + 'px';
+    el.style.animationDelay = (idx * 28) + 'ms';
+
+    const typeBadge = (ntype !== 'core' && ntype !== 'system') ? `
+      <div class="node-type-badge type-badge-${ntype}">${ntype === 'practical' ? '▭' : '◈'}</div>` : '';
+
+    el.innerHTML = `
+      <div class="node-inner" style="position:relative">
+        ${typeBadge}
+        <div class="node-hex" style="color:${color}">${node.emoji}</div>
+        <div class="node-label" style="color:${status === 'locked' ? 'rgba(100,116,139,.4)' : color}">${node.label}</div>
+      </div>`;
+
+    el.addEventListener('mouseenter', (e) => { showTooltip(e, node); renderEdges(node.id); });
+    el.addEventListener('mouseleave', () => { hideTooltip(); renderEdges(); });
+    el.addEventListener('click', (e) => { e.stopPropagation(); selectNode(node, el); });
+
+    stage.appendChild(el);
+    nodeEls[node.id] = el;
+  });
+
+  // Group / layer lane labels
+  const groupPositions2 = {};
+  nodes.forEach(n => {
+    const gk = n.group || n.layer || 'ops';
+    if (!groupPositions2[gk]) groupPositions2[gk] = { minX: n.x, minY: n.y };
+    groupPositions2[gk].minX = Math.min(groupPositions2[gk].minX, n.x);
+    groupPositions2[gk].minY = Math.min(groupPositions2[gk].minY, n.y);
+  });
+  Object.entries(groupPositions2).forEach(([group, pos]) => {
+    const lbl = document.createElement('div');
+    lbl.className = activeMode === 'system' ? 'layer-lane' : 'group-label';
+    lbl.style.left  = activeMode === 'system' ? '20px' : (pos.minX - 120) + 'px';
+    lbl.style.top   = (pos.minY - 22) + 'px';
+    lbl.style.color = GROUP_COLORS[group] || '#888';
+    lbl.textContent = activeMode === 'system'
+      ? (LAYER_META[group] ? LAYER_META[group].label : group)
+      : (GROUP_LABELS[group] || group.toUpperCase());
+    stage.appendChild(lbl);
+  });
+
+  renderEdges();
+  updateStats();
+}
+
+// ─────────────────────────────────────────
+//  setMode — swap between skill / system
+// ─────────────────────────────────────────
+function setMode(mode) {
+  if (mode === activeMode) return;
+  closePanel();
+  activeMode = mode;
+  localStorage.setItem('rdm-map-mode', mode);
+
+  // Update button states
+  document.getElementById('btn-skill').className  = 'mode-btn' + (mode === 'skill'  ? ' active' : '');
+  document.getElementById('btn-system').className = 'mode-btn' + (mode === 'system' ? ' active active-system' : '');
+
+  // Show/hide type filter bar (skill only)
+  const fb = document.getElementById('filter-bar');
+  if (fb) fb.style.display = mode === 'skill' ? 'flex' : 'none';
+
+  // Update body class for CSS shape switching
+  document.body.classList.toggle('mode-system', mode === 'system');
+
+  // Animate switch
+  document.body.classList.add('switching');
+  setTimeout(() => document.body.classList.remove('switching'), 400);
+
+  const nodes = mode === 'system' ? SYSTEM_NODES : NODES;
+  const edges = mode === 'system' ? SYSTEM_EDGES : EDGES;
+  renderMap(nodes, edges);
+
+  // Update stats bar context label
+  const contextEl = document.getElementById('stat-context');
+  if (contextEl) contextEl.textContent = mode === 'system' ? 'SYSTEM MAP' : 'SKILL GRAPH';
+}
+
+// Initial render
+renderMap(
+  activeMode === 'system' ? SYSTEM_NODES : NODES,
+  activeMode === 'system' ? SYSTEM_EDGES : EDGES
+);
+// Restore mode button state on load
+if (activeMode === 'system') {
+  document.getElementById('btn-skill').className  = 'mode-btn';
+  document.getElementById('btn-system').className = 'mode-btn active active-system';
+  document.getElementById('filter-bar').style.display = 'none';
+  document.body.classList.add('mode-system');
+}
+
+// ─────────────────────────────────────────
+//  TOOLTIP
+// ─────────────────────────────────────────
+const tooltip = document.getElementById('tooltip');
+
+function showTooltip(e, node) {
+  const status = getNodeStatusById(node.id);
+  const statusLabel = {locked:'🔒 Заблокировано',available:'◦ Доступно',progress:'◎ В процессе',done:'✓ Завершено'}[status] || '';
+  tooltip.innerHTML = `<strong>${node.label}</strong>${node.desc.substring(0,80)}...<br><span style="opacity:.5;margin-top:4px;display:block">${statusLabel}</span>`;
+  tooltip.classList.add('visible');
+  moveTooltip(e);
+}
+
+function moveTooltip(e) {
+  let x = e.clientX + 14, y = e.clientY - 10;
+  if (x + 210 > window.innerWidth) x = e.clientX - 220;
+  tooltip.style.left = x + 'px';
+  tooltip.style.top  = y + 'px';
+}
+
+function hideTooltip() {
+  tooltip.classList.remove('visible');
+}
+
+document.addEventListener('mousemove', (e) => {
+  if (tooltip.classList.contains('visible')) moveTooltip(e);
+});
+
+// ─────────────────────────────────────────
+//  SIDE PANEL
+// ─────────────────────────────────────────
+let selectedNodeEl = null;
+
+function buildCrossLinks(node) {
+  // Skill mode: show which system components this skill builds
+  if (activeMode === 'skill') {
+    const sysIds = SKILL_TO_SYSTEM[node.id];
+    if (!sysIds || !sysIds.length) return '';
+    const tags = sysIds.map(sid => {
+      const sn = SYSTEM_NODES.find(n => n.id === sid);
+      if (!sn) return '';
+      return `<span class="panel-crosslink-tag" onclick="switchAndFocus('system','${sid}')">${sn.emoji} ${sn.label}</span>`;
+    }).join('');
+    return `<div class="panel-crosslink"><div class="panel-crosslink-title">◉ В системе</div>${tags}</div>`;
+  }
+  // System mode: show which skills teach this component
+  if (activeMode === 'system' && node.skills && node.skills.length) {
+    const tags = node.skills.map(skId => {
+      const sk = NODES.find(n => n.id === skId);
+      if (!sk) return '';
+      return `<span class="panel-crosslink-tag" onclick="switchAndFocus('skill','${skId}')" style="color:#38BDF8;background:rgba(56,189,248,.08);border-color:rgba(56,189,248,.2)">${sk.emoji} ${sk.label}</span>`;
+    }).join('');
+    return `<div class="panel-crosslink"><div class="panel-crosslink-title">◦ Изучается в</div>${tags}</div>`;
+  }
+  return '';
+}
+
+function switchAndFocus(mode, nodeId) {
+  setMode(mode);
+  setTimeout(() => {
+    const el = nodeEls[nodeId];
+    if (el) el.click();
+  }, 380);
+}
+
+function selectNode(node, el) {
+  if (selectedNodeEl) selectedNodeEl.classList.remove('selected');
+  selectedNodeEl = el;
+  el.classList.add('selected');
+
+  const status = getNodeStatusById(node.id);
+  const color  = GROUP_COLORS[node.group || node.layer] || '#38BDF8';
+  const statusLabel = {locked:'Заблокировано',available:'Доступно',progress:'В процессе',done:'Завершено'}[status];
+  const statusColor = {locked:'#64748b',available:'#38BDF8',progress:'#FFC443',done:'#34D399'}[status];
+
+  // Sprint links
+  const sprintLinks = (node.sprints || []).map((s, i) => {
+    const sid = node.sprintIds?.[i];
+    if (sid) {
+      const padded = String(sid).padStart(2,'0');
+      return `<a class="panel-tag sprint-tag" href="sprints/s${padded}.html">${s}</a>`;
+    }
+    return `<span class="panel-tag">${s}</span>`;
+  }).join('');
+
+  // Prerequisites
+  const prereqTags = (node.prereqs || []).map(p => {
+    const pn = NODES.find(n => n.id === p);
+    return `<span class="panel-tag">${pn ? pn.label : p}</span>`;
+  }).join('') || '<span class="panel-tag" style="opacity:.4">нет</span>';
+
+  // Unlocks
+  const unlockTags = (node.unlocks || []).map(u => {
+    const un = NODES.find(n => n.id === u);
+    return `<span class="panel-tag">${un ? un.label : u}</span>`;
+  }).join('') || '<span class="panel-tag" style="opacity:.4">финал</span>';
+
+  // Progress bar
+  let progressPct = 0;
+  if (status === 'done') progressPct = 100;
+  else if (status === 'progress') {
+    let total = 0, done = 0;
+    (node.sprintIds || []).forEach(sid => {
+      const sp = SPRINTS ? SPRINTS.find(s => s.id === sid) : null;
+      if (sp) {
+        total += sp.instructions.length;
+        done  += JSON.parse(localStorage.getItem('sp-done-' + sid) || '[]').length;
+      }
+    });
+    progressPct = total > 0 ? Math.round(done / total * 100) : 0;
+  }
+
+  document.getElementById('panel-content').innerHTML = `
+    <div>
+      <div style="display:flex;gap:6px;align-items:center;margin-bottom:12px">
+        <span class="panel-group-tag" style="background:${color}18;color:${color};border:1px solid ${color}30;margin-bottom:0">
+          ${GROUP_LABELS[node.group || node.layer] || node.group || node.layer || ''}
+        </span>
+        ${(()=>{
+          const t = node.type||'core';
+          const tColor = {core:'#38BDF8',practical:'#34D399',incident:'#EF4444'}[t];
+          const tLabel = {core:'CORE SKILL',practical:'ПРАКТИКА',incident:'ИНЦИДЕНТ'}[t];
+          const tShape = {core:'⬡',practical:'▭',incident:'◈'}[t];
+          return '<span style="font-family:JetBrains Mono,monospace;font-size:9px;font-weight:700;letter-spacing:.1em;padding:3px 8px;border-radius:3px;background:'+tColor+'15;color:'+tColor+';border:1px solid '+tColor+'25">'+tShape+' '+tLabel+'</span>';
+        })()}
+      </div>
+      <div class="panel-status-row">
+        <div class="panel-status-dot" style="border-color:${statusColor};background:${statusColor}20"></div>
+        <span class="panel-status-label" style="color:${statusColor}">${statusLabel}</span>
+      </div>
+      <div class="panel-title">${node.emoji} ${node.title}</div>
+      <div class="panel-desc">${node.desc}</div>
+
+      ${progressPct > 0 ? `
+      <div class="panel-progress-bar">
+        <div class="panel-progress-fill" style="width:${progressPct}%;background:${statusColor}"></div>
+      </div>
+      <div style="font-family:'JetBrains Mono',monospace;font-size:9px;color:rgba(148,163,184,.4);margin-top:6px;margin-bottom:16px">${progressPct}% завершено</div>
+      ` : '<div style="margin-bottom:16px"></div>'}
+
+      <div class="panel-divider"></div>
+
+      <div class="panel-section">
+        <div class="panel-section-title">Почему важно</div>
+        <div class="panel-section-body">${node.why}</div>
+      </div>
+
+      <div class="panel-section">
+        <div class="panel-section-title">Спринты</div>
+        <div class="panel-tags">${sprintLinks}</div>
+      </div>
+
+      <div class="panel-section">
+        <div class="panel-section-title">Требует</div>
+        <div class="panel-tags">${prereqTags}</div>
+      </div>
+
+      <div class="panel-section">
+        <div class="panel-section-title">Открывает</div>
+        <div class="panel-tags">${unlockTags}</div>
+      </div>
+
+      ${buildCrossLinks(node)}
+
+
+      ${node.example ? `
+      <div class="panel-section">
+        <div class="panel-section-title">Практика</div>
+        <div class="panel-section-body">${node.example}</div>
+      </div>` : ''}
+
+      ${node.interview ? `
+      <div class="panel-divider"></div>
+      <div class="panel-interview">${node.interview}</div>` : ''}
+    </div>`;
+
+  document.getElementById('side-panel').classList.add('open');
+}
+
+function closePanel() {
+  document.getElementById('side-panel').classList.remove('open');
+  if (selectedNodeEl) { selectedNodeEl.classList.remove('selected'); selectedNodeEl = null; }
+  renderEdges();
+}
+
+// Close on outside click
+document.getElementById('map-wrap').addEventListener('click', (e) => {
+  if (!e.target.closest('.node') && !e.target.closest('#side-panel')) {
+    closePanel();
+  }
+});
+
+// ─────────────────────────────────────────
+//  STATS
+// ─────────────────────────────────────────
+function updateStats() {
+  let done = 0, progress = 0, cores = 0, practicals = 0, incidents = 0;
+  activeNodes.forEach(n => {
+    const s = getNodeStatusById(n.id);
+    if (s === 'done') done++;
+    else if (s === 'progress') progress++;
+    const t = n.type || 'core';
+    if (t === 'core') cores++;
+    else if (t === 'practical') practicals++;
+    else if (t === 'incident') incidents++;
+  });
+  const total = NODES.length;
+  const pct = Math.round((done + progress * 0.5) / total * 100);
+  document.getElementById('stat-done').textContent = done;
+  document.getElementById('stat-progress').textContent = progress;
+  document.getElementById('stat-pct').textContent = pct + '%';
+  const ce = document.getElementById('stat-core');      if(ce) ce.textContent = cores;
+  const pe = document.getElementById('stat-practical'); if(pe) pe.textContent = practicals;
+  const ie = document.getElementById('stat-incidents'); if(ie) ie.textContent = incidents;
+}
+updateStats();
+
+// ─────────────────────────────────────────
+//  FILTER BY TYPE
+// ─────────────────────────────────────────
+let activeFilter = 'all';
+
+function setFilter(type, btn) {
+  activeFilter = type;
+
+  // Update button states
+  document.querySelectorAll('.filter-btn').forEach(b => {
+    b.className = 'filter-btn';
+    if (b.dataset.filter === type) b.classList.add('active-' + type);
+  });
+
+  // Show/hide nodes
+  Object.values(nodeEls).forEach(el => {
+    const ntype = el.dataset.type || 'core';
+    if (type === 'all' || ntype === type) {
+      el.style.opacity = '';
+      el.style.pointerEvents = '';
+    } else {
+      el.style.opacity = '0.06';
+      el.style.pointerEvents = 'none';
+    }
+  });
+
+  // Re-render edges with dim
+  renderEdges(null, type);
+}
+
+// ─────────────────────────────────────────
+//  PAN / DRAG
+// ─────────────────────────────────────────
+const wrap = document.getElementById('map-wrap');
+let isDragging = false, startX, startY, scrollLeft, scrollTop;
+
+wrap.addEventListener('mousedown', (e) => {
+  if (e.target.closest('.node') || e.target.closest('#side-panel')) return;
+  isDragging = true;
+  wrap.classList.add('grabbing');
+  startX = e.pageX - wrap.offsetLeft;
+  startY = e.pageY - wrap.offsetTop;
+  scrollLeft = wrap.scrollLeft;
+  scrollTop  = wrap.scrollTop;
+});
+document.addEventListener('mouseup',   () => { isDragging = false; wrap.classList.remove('grabbing'); });
+document.addEventListener('mousemove', (e) => {
+  if (!isDragging) return;
+  e.preventDefault();
+  const x = e.pageX - wrap.offsetLeft;
+  const y = e.pageY - wrap.offsetTop;
+  wrap.scrollLeft = scrollLeft - (x - startX);
+  wrap.scrollTop  = scrollTop  - (y - startY);
+});
+
+// Center on load
+window.addEventListener('load', () => {
+  const stageW = stage.offsetWidth;
+  const wrapW  = wrap.offsetWidth;
+  if (stageW > wrapW) {
+    wrap.scrollLeft = (stageW - wrapW) / 2;
+  }
+});
+
+// ─────────────────────────────────────────
+//  KEYBOARD
+// ─────────────────────────────────────────
+document.addEventListener('keydown', (e) => {
+  if (e.key === 'Escape') closePanel();
+});
+</script>
+</body>
+</html>

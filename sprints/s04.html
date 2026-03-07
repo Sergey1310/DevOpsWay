@@ -1,0 +1,758 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>S04 — DevOps Roadmap</title>
+  <link rel="stylesheet" href="../css/style.css">
+</head>
+<body>
+<nav class="site-nav">
+  <div class="nav-inner">
+    <div class="nav-logo"><div class="nav-logo-dot"></div>DEVOPS_ROADMAP</div>
+    <div class="nav-links">
+      <a href="../index.html"    class="nav-link">Главная</a>
+      <a href="../calendar.html" class="nav-link">Календарь</a>
+      <a href="s01.html"         class="nav-link active">Спринты</a>
+      <a href="../notes.html"    class="nav-link">Конспекты</a>
+      <a href="../map.html"         class="nav-link">Карта</a>
+    </div>
+    <div class="nav-right">
+      <span class="nav-badge" id="nbadge"></span>
+      <button class="focus-toggle" id="focus-toggle" onclick="toggleFocus()">⊡ Фокус</button>
+    </div>
+  </div>
+</nav>
+<div class="wrap">
+
+  <!-- progress strip -->
+  <div class="road-bar" style="margin-top:20px">
+    <div class="road-bar-fill" id="road-fill"></div>
+  </div>
+
+  <!-- header -->
+  <div class="sprint-hdr fu">
+    <div class="sprint-ey">
+      <span class="pill" id="stage-pill"></span>
+      <span class="pill pill-phase" id="phase-pill"></span>
+      <span class="pill pill-wk" id="wk-pill"></span>
+    </div>
+    <h1 class="sprint-h1" id="s-title"></h1>
+    <div class="sprint-goal" id="s-goal"></div>
+    <div class="sprint-dates-row" id="sprint-dates-row">
+      <span class="sd-dates" id="sd-dates">—</span>
+      <span class="sd-countdown" id="sd-countdown" style="display:none"></span>
+      <button class="skip-toggle" id="skip-toggle" onclick="toggleSkip()">Пропустить спринт</button>
+    </div>
+  </div>
+
+  <!-- exam -->
+  <div class="exam-strip fu1" id="exam-strip" style="display:none">
+    <div class="exam-strip-ico">🏆</div>
+    <div class="exam-strip-txt" id="exam-txt"></div>
+  </div>
+
+  <!-- correction -->
+  <div class="correction-strip fu1" id="correction-strip" style="display:none">
+    <div class="correction-strip-ico" id="correction-ico"></div>
+    <div class="correction-strip-txt" id="correction-txt"></div>
+  </div>
+
+  <!-- time summary -->
+  <div class="sprint-time-row fu1" id="time-row">
+    <span>⏱ Времени потрачено:</span>
+    <span class="sprint-time-num" id="time-total">0 ч 0 мин</span>
+    <span class="sprint-time-sep">·</span>
+    <span id="time-sessions">0 помодоро</span>
+  </div>
+
+  <!-- content cards -->
+  <div class="cards-3 fu1">
+    <div class="ccard cc-core">
+      <div class="cc-lbl">📚 Core — теория</div>
+      <div class="cc-body" id="cc-core"></div>
+    </div>
+    <div class="ccard cc-skill">
+      <div class="cc-lbl">🛠 Skill — инструменты</div>
+      <div class="cc-body" id="cc-skill"></div>
+    </div>
+    <div class="ccard cc-deliv">
+      <div class="cc-lbl">🏗 Deliverable</div>
+      <div class="cc-body" id="cc-deliv"></div>
+    </div>
+  </div>
+
+  <!-- github link -->
+  <div class="github-link-row fu1">
+    <span class="gh-lbl">🔗 Репозиторий</span>
+    <input type="url" id="gh-input" placeholder="https://github.com/username/repo">
+    <a class="gh-open" id="gh-open" href="#" target="_blank" rel="noopener">
+      <span class="gh-icon">↗</span> Открыть
+    </a>
+  </div>
+
+  <!-- links panel -->
+  <div class="links-panel fu2" id="links-panel" style="display:none">
+    <div class="card-lbl">📎 Курсы и ресурсы</div>
+    <div class="chips" id="chips"></div>
+  </div>
+
+  <!-- pomodoro -->
+  <div class="pomo-bar fu2">
+    <div class="pomo-display work" id="pomo-display">25:00</div>
+    <div class="pomo-controls">
+      <button class="pomo-btn primary" id="pomo-start" onclick="pomoToggle()">▶ Старт</button>
+      <button class="pomo-btn" onclick="pomoReset()">↺ Сброс</button>
+      <button class="pomo-btn" onclick="pomoSwitch()" id="pomo-mode-btn">☕ Перерыв</button>
+    </div>
+    <div class="pomo-sessions" id="pomo-dots"></div>
+    <div class="pomo-label" id="pomo-label">🍅 ПОМОДОРО</div>
+    <div class="pomo-total" id="pomo-total"></div>
+  </div>
+
+  <!-- progress widget -->
+  <div class="pw-card fu2">
+    <div class="pw-head">
+      <div class="card-lbl" style="margin:0">✅ Темы спринта</div>
+      <div class="pw-pct" id="pw-pct">0%</div>
+    </div>
+    <div class="pw-bar"><div class="pw-fill" id="pw-fill" style="width:0%"></div></div>
+    <div id="topics-list"></div>
+  </div>
+
+  <!-- instructions -->
+  <div class="instr-wrap fu3">
+    <div class="instr-head">📋 План действий</div>
+    <div id="instr-list"></div>
+  </div>
+
+
+  <!-- tutorial -->
+  <div class="tutorial-wrap fu3" id="tutorial-wrap">
+    <div class="tutorial-head" onclick="tutToggle()">
+      🧭 Пошаговый туториал
+      <span class="tutorial-toggle">▼</span>
+    </div>
+    <div class="tutorial-body">
+      <div class="tut-progress-row">
+        <div class="tut-progress-bar"><div class="tut-progress-fill" id="tut-fill" style="width:0%"></div></div>
+        <div class="tut-progress-pct" id="tut-pct">0%</div>
+      </div>
+      <div id="tut-steps"></div>
+    </div>
+  </div>
+
+  <!-- self rating -->
+  <div class="self-rating fu3">
+    <div class="sr-label">⭐ Самооценка спринта</div>
+    <div class="sr-stars">
+      <span class="sr-star" data-v="1">⭐</span>
+      <span class="sr-star" data-v="2">⭐</span>
+      <span class="sr-star" data-v="3">⭐</span>
+      <span class="sr-star" data-v="4">⭐</span>
+      <span class="sr-star" data-v="5">⭐</span>
+      <span class="sr-text" id="sr-text">не оценено</span>
+    </div>
+  </div>
+
+  <!-- notes -->
+  <div class="notes-card fu4">
+    <div class="notes-hdr">
+      <div class="card-lbl" style="margin:0">📝 Конспект</div>
+      <div class="notes-toolbar">
+        <button type="button" class="tb-btn" onmousedown="event.preventDefault()" onclick="imd('## ')">H2</button>
+        <button type="button" class="tb-btn" onmousedown="event.preventDefault()" onclick="imd('### ')">H3</button>
+        <button type="button" class="tb-btn" onmousedown="event.preventDefault()" onclick="imd('**','**')"><b>B</b></button>
+        <button type="button" class="tb-btn" onmousedown="event.preventDefault()" onclick="imd('`','`')">⌨</button>
+        <button type="button" class="tb-btn" onmousedown="event.preventDefault()" onclick="imd('```\n','\n```')">{ }</button>
+        <button type="button" class="tb-btn" onmousedown="event.preventDefault()" onclick="imd('- ')">—</button>
+        <button type="button" class="tb-btn" onmousedown="event.preventDefault()" onclick="imd('> ')">❝</button>
+        <button type="button" class="notes-export-btn" onclick="exportNotes()" title="Скачать как .md">⬇ .md</button>
+      </div>
+    </div>
+    <div class="ntabs">
+      <div class="ntab on" id="ntab-e" onclick="stab('e')">Редактор</div>
+      <div class="ntab"    id="ntab-p" onclick="stab('p')">Предпросмотр</div>
+    </div>
+    <textarea class="notes-ta" id="nta"
+      placeholder="Markdown поддерживается.&#10;&#10;## Что изучил&#10;&#10;## Ключевые команды&#10;&#96;&#96;&#96;bash&#10;# команды здесь&#10;&#96;&#96;&#96;&#10;&#10;## Вопросы"></textarea>
+    <div class="notes-preview" id="nprev"></div>
+    <div class="notes-ft">
+      <span class="notes-hint" id="nhint">сохраняется автоматически</span>
+      <span class="notes-clear" onclick="clrNotes()">очистить</span>
+    </div>
+  </div>
+
+  <!-- nav -->
+  <div class="sprint-nav fu4">
+    <a id="snav-prev" class="snav-btn" href="s03.html">← Предыдущий</a>
+    <div class="snav-mid" id="snav-mid">S04 из 28</div>
+    <a id="snav-next" class="snav-btn" href="s05.html">Следующий →</a>
+  </div>
+</div>
+<footer class="footer">DevOps Roadmap · Сценарий C · 2.5 ч/день</footer>
+<script src="../js/data.js"></script>
+<script src="../js/tutorials.js"></script>
+<script>
+const SID = 4;
+const sp  = SPRINTS.find(s => s.id === SID);
+const ph  = PHASE_META[sp.phase] || {label:'—', color:'#888'};
+const PC  = {linux:'#38BDF8',docker:'#60A5FA',cicd:'#34D399',cloud:'#FB923C',
+             k8s:'#F87171',buffer:'#A3E635',exam:'#FFC443',phase2:'#C084FC'};
+const pc  = PC[sp.phase] || ph.color || '#888';
+
+/* ── Header ──────────────────────────────────────────────────── */
+document.getElementById('road-fill').style.width = (sp.id / SPRINTS.length * 100).toFixed(1) + '%';
+const nb = document.getElementById('nbadge');
+nb.textContent = ph.label; nb.style.color = pc; nb.style.borderColor = pc;
+document.getElementById('stage-pill').textContent = sp.stage === 1 ? '🎯 Этап 1' : '🚀 Этап 2';
+const pp = document.getElementById('phase-pill');
+pp.textContent = ph.label; pp.style.color = pc; pp.style.borderColor = pc;
+document.getElementById('wk-pill').textContent = 'Недели ' + sp.weeks;
+document.getElementById('s-title').textContent = 'S' + String(sp.id).padStart(2,'0') + ' · ' + sp.title;
+const gEl = document.getElementById('s-goal');
+gEl.textContent = sp.goal; gEl.style.borderLeftColor = pc;
+
+/* ── Exam ─────────────────────────────────────────────────────── */
+if (sp.exam) {
+  const es = document.getElementById('exam-strip'); es.style.display = 'flex';
+  document.getElementById('exam-txt').textContent = 'Экзамен в этом спринте: ' + sp.exam;
+  es.style.borderColor = pc + '44'; es.style.background = pc + '0D';
+}
+
+/* ── Cards ────────────────────────────────────────────────────── */
+document.getElementById('cc-core').textContent  = sp.core;
+document.getElementById('cc-skill').textContent = sp.skill;
+document.getElementById('cc-deliv').textContent = sp.deliverable;
+
+/* ── GitHub link ──────────────────────────────────────────────── */
+const GH_KEY = 'sp-gh-' + SID;
+const ghInput = document.getElementById('gh-input');
+const ghOpen  = document.getElementById('gh-open');
+ghInput.value = localStorage.getItem(GH_KEY) || '';
+if (ghInput.value) { ghOpen.href = ghInput.value; ghOpen.classList.add('show'); }
+ghInput.addEventListener('input', () => {
+  const v = ghInput.value.trim();
+  localStorage.setItem(GH_KEY, v);
+  if (v.startsWith('http')) { ghOpen.href = v; ghOpen.classList.add('show'); }
+  else { ghOpen.classList.remove('show'); }
+});
+
+/* ── Links ────────────────────────────────────────────────────── */
+const lnks = (typeof SPRINT_LINKS !== 'undefined' && SPRINT_LINKS[SID]) || [];
+if (lnks.length) {
+  document.getElementById('links-panel').style.display = 'block';
+  const ch  = document.getElementById('chips');
+  const ico = {course:'📚', exam:'🏆', tool:'🔧'};
+  lnks.forEach(l => {
+    const a = document.createElement('a');
+    a.className = 'chip chip-' + l.type;
+    a.href = l.url; a.target = '_blank'; a.rel = 'noopener';
+    a.innerHTML = `<span style="font-size:11px;opacity:.7">${ico[l.type]||'🔗'}</span>${l.text}`;
+    ch.appendChild(a);
+  });
+}
+
+/* ── Pomodoro ─────────────────────────────────────────────────── */
+const POMO_KEY = 'sp-pomo-' + SID;
+let pomoWork = 25 * 60, pomoBreak = 5 * 60;
+let pomoRemain, pomoIsWork = true, pomoRunning = false, pomoTimer = null;
+let pomoSessions = parseInt(localStorage.getItem(POMO_KEY) || '0');
+
+function pomoRenderDots() {
+  const wrap = document.getElementById('pomo-dots');
+  wrap.innerHTML = '';
+  for (let i = 0; i < 4; i++) {
+    const d = document.createElement('div');
+    d.className = 'pomo-dot' + (i < pomoSessions % 4 ? ' done' : '');
+    wrap.appendChild(d);
+  }
+}
+function pomoDisplay(s) {
+  const m = Math.floor(s / 60), sec = s % 60;
+  const el = document.getElementById('pomo-display');
+  el.textContent = String(m).padStart(2,'0') + ':' + String(sec).padStart(2,'0');
+  el.className = 'pomo-display ' + (pomoIsWork
+    ? (s <= 60 ? 'warn' : 'work') : 'break');
+}
+function pomoReset() {
+  clearInterval(pomoTimer); pomoRunning = false;
+  pomoRemain = pomoIsWork ? pomoWork : pomoBreak;
+  pomoDisplay(pomoRemain);
+  document.getElementById('pomo-start').textContent = '▶ Старт';
+  document.getElementById('pomo-label').textContent = pomoIsWork ? '🍅 ПОМОДОРО' : '☕ ПЕРЕРЫВ';
+}
+function pomoSwitch() {
+  clearInterval(pomoTimer); pomoRunning = false;
+  pomoIsWork = !pomoIsWork;
+  document.getElementById('pomo-mode-btn').textContent = pomoIsWork ? '☕ Перерыв' : '🍅 Работа';
+  pomoReset();
+}
+function pomoToggle() {
+  if (pomoRunning) {
+    clearInterval(pomoTimer); pomoRunning = false;
+    document.getElementById('pomo-start').textContent = '▶ Продолжить';
+  } else {
+    if (!pomoRemain || pomoRemain <= 0) pomoRemain = pomoIsWork ? pomoWork : pomoBreak;
+    pomoRunning = true;
+    document.getElementById('pomo-start').textContent = '⏸ Пауза';
+    pomoTimer = setInterval(() => {
+      pomoRemain--;
+      pomoDisplay(pomoRemain);
+      if (pomoRemain <= 0) {
+        clearInterval(pomoTimer); pomoRunning = false;
+        if (pomoIsWork) { pomoSessions++; localStorage.setItem(POMO_KEY, pomoSessions); pomoRenderDots(); updateTimeSummary(); updatePomoTotal(); }
+        // auto-switch
+        pomoIsWork = !pomoIsWork;
+        document.getElementById('pomo-mode-btn').textContent = pomoIsWork ? '☕ Перерыв' : '🍅 Работа';
+        pomoReset();
+        if ('Notification' in window && Notification.permission === 'granted') {
+          new Notification(pomoIsWork ? '🍅 Время работать!' : '☕ Время отдохнуть!');
+        }
+      }
+    }, 1000);
+  }
+}
+pomoReset();
+pomoRenderDots();
+
+/* ── Topics / progress ────────────────────────────────────────── */
+const TK = 'sp-top-' + SID, DK = 'sp-done-' + SID;
+const tops = [
+  {l: sp.core.split(':')[0].trim()},
+  {l: sp.skill.split(':')[0].trim()},
+  {l: sp.deliverable.split(':')[0].substring(0,55)},
+  ...(sp.exam ? [{l: sp.exam}] : [])
+];
+let tDone = JSON.parse(localStorage.getItem(TK) || '[]');
+function renderTopics() {
+  const tl = document.getElementById('topics-list'); tl.innerHTML = '';
+  let cnt = 0;
+  tops.forEach((t, i) => {
+    const ok = tDone.includes(i); if (ok) cnt++;
+    const r = document.createElement('div');
+    r.className = 't-row' + (ok ? ' done' : '');
+    r.innerHTML = `<div class="t-cb">${ok ? '✓' : ''}</div><div class="t-lbl">${t.l}</div>`;
+    r.addEventListener('click', () => {
+      tDone.includes(i) ? tDone = tDone.filter(x => x !== i) : tDone.push(i);
+      localStorage.setItem(TK, JSON.stringify(tDone));
+      renderTopics();
+    });
+    tl.appendChild(r);
+  });
+  const pct = Math.round(cnt / tops.length * 100);
+  const pe = document.getElementById('pw-pct');
+  pe.textContent = pct + '%';
+  pe.style.color = pct === 100 ? 'var(--grn)' : pct >= 50 ? 'var(--ylw)' : 'var(--t2)';
+  document.getElementById('pw-fill').style.width = pct + '%';
+}
+renderTopics();
+
+/* ── Instructions — 3 states ──────────────────────────────────── */
+const DK2 = 'sp-state-' + SID;
+let done = JSON.parse(localStorage.getItem(DK) || '[]');
+let states = JSON.parse(localStorage.getItem(DK2) || '{}');
+if (Object.keys(states).length === 0 && done.length > 0) {
+  done.forEach(i => { states[i] = 1; });
+  localStorage.setItem(DK2, JSON.stringify(states));
+}
+function renderInstr() {
+  const il = document.getElementById('instr-list'); il.innerHTML = '';
+  sp.instructions.forEach((s, i) => {
+    const state = states[i] || 0;
+    const cls = state === 1 ? ' done' : state === 2 ? ' unclear' : '';
+    const cbTxt = state === 1 ? '\u2713' : state === 2 ? '?' : '';
+    const item = document.createElement('div');
+    item.className = 'instr-item' + cls;
+    item.innerHTML = `<div class="instr-n">${i+1}</div>`
+      + `<div class="instr-body"><div class="instr-cb">${cbTxt}</div>`
+      + `<div><div class="instr-txt">${s}</div>`
+      + (state === 2 ? `<div class="instr-hint">\u26a0 \u041f\u043e\u0432\u0442\u043e\u0440\u0438\u0442\u044c \u043f\u0435\u0440\u0435\u0434 \u044d\u043a\u0437\u0430\u043c\u0435\u043d\u043e\u043c</div>` : '')
+      + `</div></div>`;
+    item.addEventListener('click', e => {
+      if (e.target.closest('.instr-hint')) return;
+      states[i] = ((states[i] || 0) + 1) % 3;
+      if (states[i] === 0) delete states[i];
+      done = Object.keys(states).filter(k => states[k] === 1).map(Number);
+      localStorage.setItem(DK, JSON.stringify(done));
+      localStorage.setItem(DK2, JSON.stringify(states));
+      renderInstr();
+    });
+    il.appendChild(item);
+  });
+}
+renderInstr();
+
+/* ── Self rating ──────────────────────────────────────────────── */
+const SR_KEY = 'sp-rating-' + SID;
+const SR_LABELS = ['','😐 Сложновато','🙂 Неплохо','😊 Хорошо','💪 Отлично','🔥 Идеально'];
+let srVal = parseInt(localStorage.getItem(SR_KEY) || '0');
+function renderRating() {
+  document.querySelectorAll('.sr-star').forEach(star => {
+    star.classList.toggle('on', parseInt(star.dataset.v) <= srVal);
+  });
+  document.getElementById('sr-text').textContent = SR_LABELS[srVal] || 'не оценено';
+}
+document.querySelectorAll('.sr-star').forEach(star => {
+  star.addEventListener('click', () => {
+    srVal = parseInt(star.dataset.v);
+    localStorage.setItem(SR_KEY, srVal);
+    renderRating();
+  });
+  star.addEventListener('mouseenter', () => {
+    document.querySelectorAll('.sr-star').forEach(s => {
+      s.style.opacity = parseInt(s.dataset.v) <= parseInt(star.dataset.v) ? '1' : '0.3';
+    });
+  });
+  star.addEventListener('mouseleave', renderRating);
+});
+renderRating();
+
+/* ── Notes ────────────────────────────────────────────────────── */
+const NK  = 'sp-notes-' + SID;
+const nta = document.getElementById('nta');
+const nprev = document.getElementById('nprev');
+const nhint = document.getElementById('nhint');
+nta.value = localStorage.getItem(NK) || '';
+let saveTimer;
+nta.addEventListener('input', () => {
+  clearTimeout(saveTimer);
+  nhint.textContent = 'сохранение...';
+  saveTimer = setTimeout(() => {
+    localStorage.setItem(NK, nta.value);
+    nhint.textContent = '✓ сохранено';
+    nhint.classList.add('flash');
+    setTimeout(() => { nhint.classList.remove('flash'); nhint.textContent = 'сохранено'; }, 1500);
+  }, 600);
+});
+window.stab = t => {
+  if (t === 'p') {
+    nprev.innerHTML = md2html(nta.value); nprev.style.display = 'block'; nta.style.display = 'none';
+    document.getElementById('ntab-p').classList.add('on');
+    document.getElementById('ntab-e').classList.remove('on');
+  } else {
+    nta.style.display = 'block'; nprev.style.display = 'none';
+    document.getElementById('ntab-e').classList.add('on');
+    document.getElementById('ntab-p').classList.remove('on');
+  }
+};
+window.imd = (b, a = '') => {
+  const s = nta.selectionStart, e = nta.selectionEnd, sel = nta.value.slice(s, e);
+  nta.value = nta.value.slice(0,s) + b + sel + a + nta.value.slice(e);
+  nta.selectionStart = s + b.length; nta.selectionEnd = s + b.length + sel.length;
+  nta.focus(); nta.dispatchEvent(new Event('input'));
+};
+window.clrNotes = () => {
+  if (!nta.value.trim()) return;
+  if (!confirm('Очистить конспект?')) return;
+  nta.value = ''; localStorage.removeItem(NK); nhint.textContent = 'очищено';
+};
+window.exportNotes = () => {
+  const content = nta.value.trim();
+  if (!content) { nhint.textContent = 'Конспект пуст'; return; }
+  const safeTitle = sp.title.replace(/[^\w\s-]/g,'').trim().replace(/\s+/g,'-');
+  const filename  = `S${String(sp.id).padStart(2,'0')}-${safeTitle}.md`;
+  const header    = `# S${String(sp.id).padStart(2,'0')} — ${sp.title}\n\n`;
+  const blob = new Blob([header + content], {type:'text/markdown;charset=utf-8'});
+  const url  = URL.createObjectURL(blob);
+  const a = document.createElement('a'); a.href = url; a.download = filename; a.click();
+  URL.revokeObjectURL(url);
+  nhint.textContent = '✓ скачано'; nhint.classList.add('flash');
+  setTimeout(() => { nhint.classList.remove('flash'); nhint.textContent = 'сохранено'; }, 2000);
+};
+function md2html(t) {
+  if (!t.trim()) return '<p style="color:var(--t4);font-style:italic">Пусто…</p>';
+  const codeBlocks = [];
+  t = t.replace(/```(\w*)\n?([\s\S]*?)```/g, function(_,lang,code) {
+    const safe = code.trim().replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
+    codeBlocks.push('<pre><code' + (lang?' class="lang-'+lang+'"':'') + '>' + safe + '</code></pre>');
+    return 'CODE' + (codeBlocks.length - 1) + '';
+  });
+  const bqBlocks = [];
+  t = t.replace(/^> (.+)$/gm, function(_,inner) {
+    bqBlocks.push(inner);
+    return 'BQ' + (bqBlocks.length - 1) + '';
+  });
+  let s = t.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
+  s = s.replace(/`([^`]+)`/g,'<code>$1</code>');
+  s = s.replace(/^### (.+)$/gm,'<h3>$1</h3>');
+  s = s.replace(/^## (.+)$/gm,'<h2>$1</h2>');
+  s = s.replace(/^# (.+)$/gm,'<h1>$1</h1>');
+  s = s.replace(/\*\*(.+?)\*\*/g,'<strong>$1</strong>');
+  s = s.replace(/\*(.+?)\*/g,'<em>$1</em>');
+  s = s.replace(/(\|.+\|\n?)+/g, function(tbl) {
+    const rows = tbl.trim().split('\n').filter(function(r){return r.trim();});
+    if (rows.length < 2) return tbl;
+    const isSep = function(r){ return /^\|[\s\-:|]+\|$/.test(r); };
+    let html = '<table>'; let inBody = false;
+    rows.forEach(function(row,i) {
+      if (isSep(row)) { inBody=true; return; }
+      const cells = row.split('|').filter(function(_,ci){return ci>0&&ci<row.split('|').length-1;});
+      const tag = (!inBody&&i===0)?'th':'td';
+      html += '<tr>'+cells.map(function(c){return '<'+tag+'>'+c.trim()+'</'+tag+'>';}).join('')+'</tr>';
+    });
+    html += '</table>'; return html;
+  });
+  s = s.replace(/((?:^\d+\. .+\n?)+)/gm, function(b) {
+    const items = b.trim().split('\n').map(function(l){return l.replace(/^\d+\. /,'');});
+    return '<ol>'+items.map(function(i){return '<li>'+i+'</li>';}).join('')+'</ol>';
+  });
+  s = s.replace(/((?:^- .+\n?)+)/gm, function(b) {
+    const items = b.trim().split('\n').map(function(l){return l.replace(/^- /,'');});
+    return '<ul>'+items.map(function(i){return '<li>'+i+'</li>';}).join('')+'</ul>';
+  });
+  s = s.replace(/\[([^\]]+)\]\(([^)]+)\)/g,'<a href="$2" target="_blank">$1</a>');
+  s = s.replace(/\n{2,}/g,'</p><p>').trim();
+  s = s.replace(/CODE(\d+)/g, function(_,i){ return codeBlocks[parseInt(i)]; });
+  s = s.replace(/BQ(\d+)/g, function(_,i){ return '<blockquote>' + bqBlocks[parseInt(i)] + '</blockquote>'; });
+  return '<p>' + s + '</p>';
+}
+
+/* ── Correction ───────────────────────────────────────────────── */
+if (sp.correction) {
+  const cs = document.getElementById('correction-strip');
+  cs.style.display = 'flex';
+  document.getElementById('correction-ico').textContent =
+    sp.correction.startsWith('⚠️') ? '⚠️' :
+    sp.correction.startsWith('💡') ? '💡' :
+    sp.correction.startsWith('🔒') ? '🔒' :
+    sp.correction.startsWith('📌') ? '📌' :
+    sp.correction.startsWith('🟢') ? '🟢' :
+    sp.correction.startsWith('🎯') ? '🎯' : 'ℹ️';
+  document.getElementById('correction-txt').textContent = sp.correction;
+}
+
+/* ── Time summary ─────────────────────────────────────────────── */
+function updateTimeSummary() {
+  const sessions = parseInt(localStorage.getItem(POMO_KEY) || '0');
+  const mins = sessions * 25;
+  const h = Math.floor(mins / 60), m = mins % 60;
+  document.getElementById('time-total').textContent = `${h} ч ${m} мин`;
+  document.getElementById('time-sessions').textContent = `${sessions} помодоро`;
+}
+updateTimeSummary();
+
+/* ── Pomo total label ──────────────────────────────────────────── */
+function updatePomoTotal() {
+  const s = parseInt(localStorage.getItem(POMO_KEY) || '0');
+  const el = document.getElementById('pomo-total');
+  if (s > 0) el.textContent = `${s * 25} мин всего`;
+}
+updatePomoTotal();
+
+/* ── Focus mode ───────────────────────────────────────────────── */
+window.toggleFocus = function() {
+  document.body.classList.toggle('focus-mode');
+  const btn = document.getElementById('focus-toggle');
+  btn.textContent = document.body.classList.contains('focus-mode') ? '⊞ Выход' : '⊡ Фокус';
+};
+
+/* ── Sprint dates & countdown ─────────────────────────────────── */
+(function() {
+  const saved = localStorage.getItem('rdm-start');
+  if (!saved) return;
+  const base = new Date(saved);
+  function addDays(d,n){const r=new Date(d);r.setDate(r.getDate()+n);return r;}
+  const start = addDays(base, (sp.id-1)*14);
+  const end   = addDays(base,  sp.id*14-1);
+  const fmt = d => d.toLocaleDateString('ru-RU',{day:'numeric',month:'short'});
+  document.getElementById('sd-dates').textContent = `${fmt(start)} \u2014 ${fmt(end)}`;
+  const now = new Date(); now.setHours(0,0,0,0);
+  const daysToStart = Math.ceil((start - now) / 86400000);
+  const daysToEnd   = Math.ceil((end   - now) / 86400000);
+  const cdEl = document.getElementById('sd-countdown');
+  cdEl.style.display = 'inline-flex';
+  if (daysToStart > 0) {
+    cdEl.textContent = `\u0447\u0435\u0440\u0435\u0437 ${daysToStart} \u0434\u043d.`;
+    cdEl.className = 'sd-countdown sd-upcoming';
+  } else if (daysToEnd >= 0) {
+    cdEl.textContent = daysToEnd === 0 ? '\u043f\u043e\u0441\u043b\u0435\u0434\u043d\u0438\u0439 \u0434\u0435\u043d\u044c' : `\u043e\u0441\u0442\u0430\u043b\u043e\u0441\u044c ${daysToEnd} \u0434\u043d.`;
+    cdEl.className = 'sd-countdown sd-active';
+  } else {
+    cdEl.textContent = `\u043f\u0440\u043e\u0441\u0440\u043e\u0447\u0435\u043d \u043d\u0430 ${Math.abs(daysToEnd)} \u0434\u043d.`;
+    cdEl.className = 'sd-countdown sd-overdue';
+  }
+})();
+
+/* ── Skip sprint ──────────────────────────────────────────────── */
+const SKIP_KEY = 'sp-skip-' + SID;
+window.toggleSkip = function() {
+  const cur = localStorage.getItem(SKIP_KEY) === '1';
+  localStorage.setItem(SKIP_KEY, cur ? '0' : '1');
+  const btn = document.getElementById('skip-toggle');
+  btn.textContent = cur ? '\u041f\u0440\u043e\u043f\u0443\u0441\u0442\u0438\u0442\u044c \u0441\u043f\u0440\u0438\u043d\u0442' : '\u21a9 \u0412\u0435\u0440\u043d\u0443\u0442\u044c \u0441\u043f\u0440\u0438\u043d\u0442';
+  btn.classList.toggle('on', !cur);
+  document.body.style.opacity = cur ? '' : '0.6';
+};
+(function initSkip() {
+  if (localStorage.getItem(SKIP_KEY) === '1') {
+    const btn = document.getElementById('skip-toggle');
+    btn.textContent = '\u21a9 \u0412\u0435\u0440\u043d\u0443\u0442\u044c \u0441\u043f\u0440\u0438\u043d\u0442';
+    btn.classList.add('on');
+    document.body.style.opacity = '0.6';
+  }
+})();
+
+/* ── Pomo day tracking ────────────────────────────────────────── */
+const today = new Date().toISOString().slice(0,10);
+const POMO_DAY_KEY = 'sp-pomo-day-' + SID + '-' + today;
+// Day tracking: record pomo sessions for today
+(function() {
+  try {
+    const _orig = Storage.prototype.setItem;
+    Storage.prototype.setItem = function(key, value) {
+      if (key === POMO_KEY) {
+        // Delta tracking: record how many sessions done TODAY
+        // by comparing new cumulative total with yesterday-end snapshot
+        const prev = parseInt(localStorage.getItem(POMO_DAY_KEY + '-base') || localStorage.getItem(key) || '0');
+        const newTotal = parseInt(value) || 0;
+        // base = value at start of today (set once per day)
+        const baseKey = POMO_DAY_KEY + '-base';
+        if (!localStorage.getItem(baseKey)) {
+          // first write today: set base to previous total BEFORE this session
+          _orig.call(this, baseKey, String(parseInt(localStorage.getItem(key) || '0')));
+        }
+        const base = parseInt(localStorage.getItem(baseKey) || '0');
+        const todayCount = Math.max(0, newTotal - base);
+        _orig.call(this, POMO_DAY_KEY, String(todayCount));
+      }
+      _orig.call(this, key, value);
+    };
+  } catch(e) {}
+})();
+
+/* ── Keyboard navigation ──────────────────────────────────────── */
+document.addEventListener('keydown', e => {
+  if (e.target.tagName === 'TEXTAREA' || e.target.tagName === 'INPUT') return;
+  if (e.key === 'ArrowRight' || e.key === 'ArrowLeft') {
+    e.preventDefault();
+    const btn = e.key === 'ArrowRight'
+      ? document.getElementById('snav-next')
+      : document.getElementById('snav-prev');
+    if (btn && !btn.classList.contains('off')) btn.click();
+  }
+  if ((e.key === 'f' || e.key === 'F') && !e.ctrlKey && !e.metaKey) toggleFocus();
+});
+
+/* nav baked into HTML */
+
+/* ── Tutorial ────────────────────────────────────────────────── */
+const TUT_KEY = 'sp-tut-' + SID;
+let tutState = JSON.parse(localStorage.getItem(TUT_KEY) || '{}');
+
+function tutSave() { localStorage.setItem(TUT_KEY, JSON.stringify(tutState)); }
+
+function tutToggle() {
+  const w = document.getElementById('tutorial-wrap');
+  w.classList.toggle('open');
+}
+
+function tutRenderProgress() {
+  const steps = sp.tutorial?.steps || [];
+  if (!steps.length) return;
+  const done = (tutState.stepsDone || []).length;
+  const pct = Math.round(done / steps.length * 100);
+  document.getElementById('tut-fill').style.width = pct + '%';
+  document.getElementById('tut-pct').textContent = pct + '%';
+}
+
+function tutRenderBody(body) {
+  let s = body.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
+  const codeBlocks = [];
+  s = s.replace(/```[a-z]*\n([\s\S]*?)```/g, (_, c) => {
+    codeBlocks.push(`<pre><code>${c.trimEnd()}</code></pre>`);
+    return '\x01CODE' + (codeBlocks.length - 1) + '\x01';
+  });
+  s = s.replace(/`([^`]+)`/g, '<code>$1</code>');
+  s = s.replace(/\*\*([^*]+)\*\*/g, '<strong>$1</strong>');
+  s = s.split('\n\n').map(p => {
+    p = p.trim();
+    if (!p || p.includes('\x01CODE')) return p;
+    return '<p>' + p.replace(/\n/g,' ') + '</p>';
+  }).join('');
+  codeBlocks.forEach((cb, i) => { s = s.replace('\x01CODE' + i + '\x01', cb); });
+  return s;
+}
+
+function tutRender() {
+  const steps = sp.tutorial?.steps || [];
+  if (!steps.length) {
+    document.getElementById('tutorial-wrap').style.display = 'none';
+    return;
+  }
+  const container = document.getElementById('tut-steps');
+  container.innerHTML = '';
+
+  steps.forEach((step, si) => {
+    const isDone = (tutState.stepsDone || []).includes(si);
+    const isExp = tutState.expanded === si;
+
+    const el = document.createElement('div');
+    el.className = 'tut-step' + (isDone ? ' done' : '') + (isExp ? ' expanded' : '');
+
+    const hdr = document.createElement('div');
+    hdr.className = 'tut-step-hdr';
+    hdr.innerHTML = '<div class="tut-step-num">' + (si+1) + '</div>'
+      + '<div class="tut-step-title">' + step.title + '</div>'
+      + '<button class="tut-step-done-btn" onclick="tutToggleDone(' + si + ',event)">' + (isDone?'✓ Готово':'Отметить') + '</button>'
+      + '<span class="tut-step-chevron">▼</span>';
+    hdr.addEventListener('click', function(e) {
+      if (e.target.closest('.tut-step-done-btn')) return;
+      tutState.expanded = isExp ? null : si;
+      tutSave(); tutRender();
+    });
+
+    const content = document.createElement('div');
+    content.className = 'tut-step-content';
+
+    const bodyDiv = document.createElement('div');
+    bodyDiv.className = 'tut-body-text';
+    bodyDiv.innerHTML = tutRenderBody(step.body);
+    content.appendChild(bodyDiv);
+
+    if (step.checklist && step.checklist.length) {
+      const clbl = document.createElement('div');
+      clbl.className = 'tut-checklist-lbl';
+      clbl.textContent = '✓ Проверочный список';
+      content.appendChild(clbl);
+
+      const cl = document.createElement('ul');
+      cl.className = 'tut-checklist';
+      step.checklist.forEach(function(item, ci) {
+        const key = si + '-' + ci;
+        const checked = tutState.checks && tutState.checks[key];
+        const li = document.createElement('li');
+        li.className = 'tut-check-item' + (checked ? ' checked' : '');
+        li.innerHTML = '<div class="tut-check-box">' + (checked?'✓':'') + '</div>'
+          + '<div class="tut-check-text">' + item + '</div>';
+        li.addEventListener('click', function() {
+          if (!tutState.checks) tutState.checks = {};
+          tutState.checks[key] = !tutState.checks[key];
+          tutSave(); tutRender();
+        });
+        cl.appendChild(li);
+      });
+      content.appendChild(cl);
+    }
+
+    el.appendChild(hdr);
+    el.appendChild(content);
+    container.appendChild(el);
+  });
+  tutRenderProgress();
+}
+
+window.tutToggleDone = function(si, e) {
+  e.stopPropagation();
+  if (!tutState.stepsDone) tutState.stepsDone = [];
+  const idx = tutState.stepsDone.indexOf(si);
+  if (idx === -1) tutState.stepsDone.push(si);
+  else tutState.stepsDone.splice(idx, 1);
+  tutSave(); tutRender();
+};
+
+tutRender();
+
+</script>
+</body>
+</html>

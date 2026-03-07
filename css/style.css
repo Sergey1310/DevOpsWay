@@ -566,13 +566,15 @@ code{font-family:var(--fm);font-size:11.5px;background:var(--bg3);color:var(--gr
 
 /* Current sprint card */
 .current-sprint-btn {
-  display: flex; align-items: center; gap: 12px;
+  display: none; /* shown by JS when current sprint is known */
+  align-items: center; gap: 12px;
   padding: 12px 18px;
   background: var(--bg3); border: 1px solid var(--b2);
   border-radius: var(--r8);
   text-decoration: none; transition: all var(--ease);
   margin-left: auto;
 }
+.current-sprint-btn.visible { display: flex; }
 .current-sprint-btn:hover {
   background: var(--bg4); border-color: var(--grn);
 }
@@ -627,9 +629,20 @@ code{font-family:var(--fm);font-size:11.5px;background:var(--bg3);color:var(--gr
 }
 .search-clear:hover { color: var(--t1); background: var(--b1); }
 .search-count {
+  display: none; /* shown by JS when filtering is active */
   font-family: var(--fm); font-size: 10px; color: var(--label-color);
   margin-top: 8px; margin-bottom: 16px;
 }
+.search-count.visible { display: block; }
+
+/* Stage 2 divider hidden when all stage-2 cards filtered out */
+.hidden-divider { display: none !important; }
+
+/* label элемент в роли кнопки */
+label.backup-btn { cursor: pointer; }
+
+/* Override card-lbl margin in daily-card header */
+.daily-card-lbl { margin: 0; }
 
 /* Current sprint highlight on card */
 .scard.is-current {
@@ -730,12 +743,14 @@ code{font-family:var(--fm);font-size:11.5px;background:var(--bg3);color:var(--gr
 
 /* Streak badge */
 .streak-badge {
-  display: inline-flex; align-items: center; gap: 7px;
+  display: none; /* shown by JS when streak >= 2 */
+  align-items: center; gap: 7px;
   padding: 8px 16px; border-radius: var(--r8);
   background: var(--bg2); border: 1px solid var(--b2);
   font-family: var(--fm); font-size: 11px; color: var(--t2);
   margin-top: 16px;
 }
+.streak-badge.visible { display: inline-flex; }
 .streak-n {
   font-family: var(--fm); font-size: 20px; font-weight: 700;
   color: var(--ylw); line-height: 1;

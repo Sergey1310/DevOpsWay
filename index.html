@@ -37,7 +37,7 @@
       <div><div class="stat-n">7+</div><div class="stat-l">Проектов</div></div>
     </div>
     <!-- Streak -->
-    <div class="streak-badge fu1" id="streak-badge" style="display:none">
+    <div class="streak-badge fu1" id="streak-badge">
       <span class="streak-fire">🔥</span>
       <span class="streak-n" id="streak-n">0</span>
       <span>дней подряд</span>
@@ -58,7 +58,7 @@
           <button class="recap-open-btn" onclick="openRecap()">📊 Итоги недели</button>
         </div>
       </div>
-      <a class="current-sprint-btn" id="current-sprint-btn" href="#" style="display:none">
+      <a class="current-sprint-btn" id="current-sprint-btn" href="#">
         <div>
           <div class="csb-label">▶ Текущий спринт</div>
           <div class="csb-title" id="csb-title">—</div>
@@ -67,19 +67,19 @@
       </a>
     </div>
     <div class="phase-bars" id="phase-bars"></div>
-  <div class="pace-row" id="pace-row"></div>
-  <div class="today-timer-row" id="today-timer-row">
+    <div class="pace-row" id="pace-row"></div>
+    <div class="today-timer-row" id="today-timer-row">
     <span class="tt-label">Сегодня</span>
     <span class="tt-val" id="tt-val">0 ч 0 мин</span>
     <span class="tt-goal" id="tt-goal">/ цель 2.5 ч</span>
     <div class="tt-bar-wrap"><div class="tt-bar-track"><div class="tt-bar-fill" id="tt-bar" style="width:0%"></div></div></div>
-  </div>
+    </div>
   </div>
 
   <!-- DAILY NOTE -->
   <div class="daily-card fu1" id="daily-card">
     <div class="daily-hdr">
-      <div class="card-lbl" style="margin:0">📓 Сегодня</div>
+      <div class="card-lbl daily-card-lbl">📓 Сегодня</div>
       <span class="daily-date" id="daily-date"></span>
     </div>
     <textarea class="daily-ta" id="daily-ta" placeholder="Что делал сегодня? Что понял? Что буксует?"></textarea>
@@ -95,7 +95,7 @@
     <div class="backup-row">
       <div class="backup-lbl">💾 Резервная копия прогресса</div>
       <button class="backup-btn primary" onclick="exportBackup()">⬇ Экспорт JSON</button>
-      <label class="backup-btn" style="cursor:pointer">
+      <label class="backup-btn">
         ⬆ Импорт JSON
         <input type="file" id="import-file" accept=".json" style="display:none" onchange="importBackup(this)">
       </label>
@@ -111,7 +111,7 @@
     <span class="search-clear" id="search-clear">✕ сбросить</span>
   </div>
   <div class="phase-filter fu1" id="phase-filter"></div>
-  <div class="search-count" id="search-count" style="display:none"></div>
+  <div class="search-count" id="search-count"></div>
 
   <!-- STAGE 1 -->
   <div class="divider-row fu2">
@@ -202,13 +202,18 @@ function updateStreak() {
   // Показываем только если стрик >= 2
   if (streak >= 2) {
     const badge = document.getElementById('streak-badge');
-    badge.style.display = 'inline-flex';
+    badge.classList.add('visible');
     document.getElementById('streak-n').textContent = streak;
   } else {
-    document.getElementById('streak-badge').style.display = 'none';
+    document.getElementById('streak-badge').classList.remove('visible');
   }
 }
 updateStreak();
+// Init skip-weekends button state immediately
+(function() {
+  const btn = document.getElementById('streak-skip-btn');
+  if (btn && localStorage.getItem('rdm-skip-weekends') === '1') btn.classList.add('on');
+})();
 
 window.toggleSkipWeekends = function() {
   const skip = localStorage.getItem('rdm-skip-weekends') === '1';
@@ -216,11 +221,6 @@ window.toggleSkipWeekends = function() {
   document.getElementById('streak-skip-btn').classList.toggle('on', !skip);
   updateStreak();
 };
-// Init button state
-document.addEventListener('DOMContentLoaded', () => {
-  const btn = document.getElementById('streak-skip-btn');
-  if (btn && localStorage.getItem('rdm-skip-weekends') === '1') btn.classList.add('on');
-});
 
 /* ── Current sprint from start date ──────────────────────────── */
 function getCurrentSprintId() {
@@ -236,6 +236,7 @@ function getCurrentSprintId() {
 const currentId = getCurrentSprintId();
 
 /* ── Build sprint cards ───────────────────────────────────────── */
+const CAPSTONE_SPRINTS = new Set([8, 10, 13, 16, 19, 21]);
 const allCards = [];
 
 SPRINTS.forEach(sp => {
@@ -254,7 +255,6 @@ SPRINTS.forEach(sp => {
   a.dataset.phase  = sp.phase;
   a.dataset.id     = sp.id;
 
-  const CAPSTONE_SPRINTS = new Set([8, 10, 13, 16, 19, 21]);
   const currentTag = sp.id === currentId
     ? `<span class="scard-current-tag">▶ сейчас</span>` : '';
   const examBadge  = sp.exam ? `<span class="badge badge-exam">${sp.exam}</span>` : '';
@@ -307,7 +307,7 @@ function buildDashboard() {
     const csp = SPRINTS.find(s => s.id === currentId);
     if (csp) {
       const btn = document.getElementById('current-sprint-btn');
-      btn.style.display = 'flex';
+      btn.classList.add('visible');
       btn.href = `sprints/s${String(currentId).padStart(2,'0')}.html`;
       document.getElementById('csb-title').textContent =
         `S${String(currentId).padStart(2,'0')} · ${csp.title.substring(0,30)}${csp.title.length>30?'…':''}`;
@@ -399,10 +399,6 @@ buildPace();
     const todaySess = parseInt(localStorage.getItem(dayKey) || '0');
     totalMins += todaySess * 25;
   });
-  // fallback: sum all pomo if no day-split data yet
-  if (totalMins === 0) {
-    // check if any sprint was active today via daily-note date match
-  }
   const h = Math.floor(totalMins / 60), m = totalMins % 60;
   const pct = Math.min(100, Math.round(totalMins / GOAL_MINS * 100));
   const el = document.getElementById('tt-val');
@@ -531,7 +527,7 @@ document.addEventListener('keydown', e => {
 
 /* ── Daily note ─────────────────────────────────────────────── */
 (function() {
-  const today = new Date().toISOString().slice(0,10);
+  const today = new Date().toISOString().slice(0,10); // shared with outer scope via rdm-today
   const KEY = 'rdm-daily-' + today;
   const HIST_KEY = 'rdm-daily-history';
   const ta = document.getElementById('daily-ta');
@@ -631,8 +627,7 @@ filterWrap.addEventListener('click', e => {
     const isOn = c.dataset.phase === activePhase;
     c.classList.toggle('on', isOn);
     if (isOn && c.dataset.phase !== 'all') {
-      const c2 = PC[c.dataset.phase] || '#888';
-      c.style.background = c2;
+      c.style.background = PC[c.dataset.phase] || '#888';
       c.style.color = 'var(--bg0)';
     } else if (!isOn) {
       c.style.background = '';
@@ -652,7 +647,7 @@ const searchCount = document.getElementById('search-count');
 
 function applyFilters() {
   const q = searchInput.value.trim().toLowerCase();
-  searchClear.style.display = q ? 'block' : 'none';
+  searchClear.classList.toggle('visible', !!q);
 
   let visible = 0;
   allCards.forEach(card => {
@@ -664,13 +659,13 @@ function applyFilters() {
   });
 
   const filtering = q || activePhase !== 'all';
-  searchCount.style.display = filtering ? 'block' : 'none';
+  searchCount.classList.toggle('visible', filtering);
   if (filtering) {
     searchCount.textContent = `Показано: ${visible} из ${SPRINTS.length} спринтов`;
   }
 
   const visStage2 = [...document.querySelectorAll('#grid2 .scard:not(.is-hidden)')].length;
-  document.getElementById('stage2-divider').style.display = visStage2 === 0 ? 'none' : '';
+  document.getElementById('stage2-divider').classList.toggle('hidden-divider', visStage2 === 0);
 }
 
 searchInput.addEventListener('input', applyFilters);

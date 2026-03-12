@@ -3,8 +3,8 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <meta name="description" content="Observability базовый: 1 Grafana dashboard + 1 Prometheus alert. platform-cli alerts. CKA troubleshooting runbook">
-  <title>S19 — Карьера: портфолио, CV, LinkedIn + первые отклики — DevOps Roadmap</title>
+  <meta name="description" content="Техническая статья, специализация, план на 6 месяцев, Capstone завершён">
+  <title>S29 — Финальная полировка + план роста — DevOps Roadmap</title>
   <link rel="stylesheet" href="../css/style.css">
 </head>
 <body>
@@ -38,7 +38,7 @@
       <span class="pill pill-phase" id="phase-pill"></span>
       <span class="pill pill-wk" id="wk-pill"></span>
     </div>
-    <h1 class="sr-only">Observability: Prometheus + Grafana базовый</h1>
+    <h1 class="sprint-h1" id="s-title">S29 — Финальная полировка + план роста</h1>
     <div class="sprint-goal" id="s-goal"></div>
     <div class="sprint-dates-row" id="sprint-dates-row">
       <span class="sd-dates" id="sd-dates">—</span>
@@ -187,15 +187,15 @@
 
   <!-- nav -->
   <div class="sprint-nav fu4">
-    <a id="snav-prev" class="snav-btn" href="s18.html">← Предыдущий</a>
-    <div class="snav-mid" id="snav-mid">S19 из 29</div>
-    <a id="snav-next" class="snav-btn" href="s20.html">Следующий →</a>
+    <a id="snav-prev" class="snav-btn" href="s28.html">← Предыдущий</a>
+    <div class="snav-mid" id="snav-mid">S29 из 29</div>
+    <a id="snav-next" class="snav-btn off" href="#">Следующий →</a>
   </div>
 </div>
 <footer class="footer">DevOps Roadmap · Plan C v3 · 3 ч/день</footer>
 <script src="../js/data.js"></script>
 <script>
-const SID = 19;
+const SID = 29;
 const sp  = SPRINTS.find(s => s.id === SID);
 const ph  = PHASE_META[sp.phase] || {label:'—', color:'#888'};
 const PC  = {linux:'#38BDF8',docker:'#60A5FA',cicd:'#34D399',cloud:'#FB923C',

@@ -3,7 +3,8 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>S09 — DevOps Roadmap</title>
+  <meta name="description" content="LFCS сертификация, CD pipeline финал, devops-tools полировка">
+  <title>S09 — LFCS: финальная подготовка и экзамен — DevOps Roadmap</title>
   <link rel="stylesheet" href="../css/style.css">
 </head>
 <body>
@@ -26,7 +27,7 @@
 <div class="wrap">
 
   <!-- progress strip -->
-  <div class="road-bar" style="margin-top:20px">
+  <div class="road-bar road-bar--page">
     <div class="road-bar-fill" id="road-fill"></div>
   </div>
 
@@ -37,23 +38,23 @@
       <span class="pill pill-phase" id="phase-pill"></span>
       <span class="pill pill-wk" id="wk-pill"></span>
     </div>
-    <h1 class="sprint-h1" id="s-title"></h1>
+    <h1 class="sprint-h1" id="s-title">S09 — LFCS: финальная подготовка и экзамен</h1>
     <div class="sprint-goal" id="s-goal"></div>
     <div class="sprint-dates-row" id="sprint-dates-row">
       <span class="sd-dates" id="sd-dates">—</span>
-      <span class="sd-countdown" id="sd-countdown" style="display:none"></span>
+      <span class="sd-countdown" id="sd-countdown"></span>
       <button class="skip-toggle" id="skip-toggle" onclick="toggleSkip()">Пропустить спринт</button>
     </div>
   </div>
 
   <!-- exam -->
-  <div class="exam-strip fu1" id="exam-strip" style="display:none">
+  <div class="exam-strip fu1" id="exam-strip">
     <div class="exam-strip-ico">🏆</div>
     <div class="exam-strip-txt" id="exam-txt"></div>
   </div>
 
   <!-- correction -->
-  <div class="correction-strip fu1" id="correction-strip" style="display:none">
+  <div class="correction-strip fu1" id="correction-strip">
     <div class="correction-strip-ico" id="correction-ico"></div>
     <div class="correction-strip-txt" id="correction-txt"></div>
   </div>
@@ -92,7 +93,7 @@
   </div>
 
   <!-- links panel -->
-  <div class="links-panel fu2" id="links-panel" style="display:none">
+  <div class="links-panel fu2" id="links-panel">
     <div class="card-lbl">📎 Курсы и ресурсы</div>
     <div class="chips" id="chips"></div>
   </div>
@@ -113,10 +114,10 @@
   <!-- progress widget -->
   <div class="pw-card fu2">
     <div class="pw-head">
-      <div class="card-lbl" style="margin:0">✅ Темы спринта</div>
+      <div class="card-lbl pw-card-lbl">✅ Темы спринта</div>
       <div class="pw-pct" id="pw-pct">0%</div>
     </div>
-    <div class="pw-bar"><div class="pw-fill" id="pw-fill" style="width:0%"></div></div>
+    <div class="pw-bar"><div class="pw-fill" id="pw-fill"></div></div>
     <div id="topics-list"></div>
   </div>
 
@@ -135,7 +136,7 @@
     </div>
     <div class="tutorial-body">
       <div class="tut-progress-row">
-        <div class="tut-progress-bar"><div class="tut-progress-fill" id="tut-fill" style="width:0%"></div></div>
+        <div class="tut-progress-bar"><div class="tut-progress-fill" id="tut-fill"></div></div>
         <div class="tut-progress-pct" id="tut-pct">0%</div>
       </div>
       <div id="tut-steps"></div>
@@ -158,7 +159,7 @@
   <!-- notes -->
   <div class="notes-card fu4">
     <div class="notes-hdr">
-      <div class="card-lbl" style="margin:0">📝 Конспект</div>
+      <div class="card-lbl pw-card-lbl">📝 Конспект</div>
       <div class="notes-toolbar">
         <button type="button" class="tb-btn" onmousedown="event.preventDefault()" onclick="imd('## ')">H2</button>
         <button type="button" class="tb-btn" onmousedown="event.preventDefault()" onclick="imd('### ')">H3</button>
@@ -174,6 +175,7 @@
       <div class="ntab on" id="ntab-e" onclick="stab('e')">Редактор</div>
       <div class="ntab"    id="ntab-p" onclick="stab('p')">Предпросмотр</div>
     </div>
+    <label for="nta" class="sr-only">Конспект спринта</label>
     <textarea class="notes-ta" id="nta"
       placeholder="Markdown поддерживается.&#10;&#10;## Что изучил&#10;&#10;## Ключевые команды&#10;&#96;&#96;&#96;bash&#10;# команды здесь&#10;&#96;&#96;&#96;&#10;&#10;## Вопросы"></textarea>
     <div class="notes-preview" id="nprev"></div>
@@ -186,13 +188,12 @@
   <!-- nav -->
   <div class="sprint-nav fu4">
     <a id="snav-prev" class="snav-btn" href="s08.html">← Предыдущий</a>
-    <div class="snav-mid" id="snav-mid">S09 из 28</div>
+    <div class="snav-mid" id="snav-mid">S09 из 29</div>
     <a id="snav-next" class="snav-btn" href="s10.html">Следующий →</a>
   </div>
 </div>
-<footer class="footer">DevOps Roadmap · Сценарий C · 2.5 ч/день</footer>
+<footer class="footer">DevOps Roadmap · Plan C v3 · 3 ч/день</footer>
 <script src="../js/data.js"></script>
-<script src="../js/tutorials.js"></script>
 <script>
 const SID = 9;
 const sp  = SPRINTS.find(s => s.id === SID);
@@ -248,7 +249,7 @@ if (lnks.length) {
     const a = document.createElement('a');
     a.className = 'chip chip-' + l.type;
     a.href = l.url; a.target = '_blank'; a.rel = 'noopener';
-    a.innerHTML = `<span style="font-size:11px;opacity:.7">${ico[l.type]||'🔗'}</span>${l.text}`;
+    a.innerHTML = `<span class="instr-detail">${ico[l.type]||'🔗'}</span>${l.text}`;
     ch.appendChild(a);
   });
 }
@@ -461,7 +462,7 @@ window.exportNotes = () => {
   setTimeout(() => { nhint.classList.remove('flash'); nhint.textContent = 'сохранено'; }, 2000);
 };
 function md2html(t) {
-  if (!t.trim()) return '<p style="color:var(--t4);font-style:italic">Пусто…</p>';
+  if (!t.trim()) return '<p class="instr-italic">Пусто…</p>';
   const codeBlocks = [];
   t = t.replace(/```(\w*)\n?([\s\S]*?)```/g, function(_,lang,code) {
     const safe = code.trim().replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');

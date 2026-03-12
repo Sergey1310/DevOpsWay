@@ -3,6 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="description" content="Карта навыков DevOps Roadmap — визуализация изученных технологий и прогресса">
   <title>Skill Map — DevOps Roadmap</title>
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link href="https://fonts.googleapis.com/css2?family=Syne:wght@400;600;700;800&family=JetBrains+Mono:wght@400;500;600&family=Space+Grotesk:wght@300;400;500&display=swap" rel="stylesheet">
@@ -204,8 +205,8 @@ const NODES = [
     title:'Docker',
     desc:'Платформа контейнеризации. Изоляция процессов, образы, networking, volumes.',
     why:'Основа современного DevOps delivery. Без Docker нет K8s, нет CI/CD на контейнерах.',
-    sprints:['S05','S06','S07'],
-    sprintIds:[5,6,7],
+    sprints:['S05','S06'],
+    sprintIds:[5,6],
     prereqs:['linux','networking'],
     unlocks:['cicd','k8s'],
     interview:'Объясни image vs container. CMD vs ENTRYPOINT. Как работает layer cache?',
@@ -230,8 +231,8 @@ const NODES = [
     title:'Docker Compose',
     desc:'Оркестрация нескольких контейнеров локально. Сети, volumes, depends_on.',
     why:'Local dev environment, интеграционные тесты, быстрый запуск стека для демо.',
-    sprints:['S07','S08'],
-    sprintIds:[7,8],
+    sprints:['S06','S07'],
+    sprintIds:[6,7],
     prereqs:['docker'],
     unlocks:['cicd'],
     interview:'Как настроить healthcheck в compose и depends_on condition: service_healthy?',
@@ -245,8 +246,8 @@ const NODES = [
     title:'CI/CD Pipelines',
     desc:'Непрерывная интеграция и доставка. Build → Test → Deploy автоматизация.',
     why:'Скорость доставки изменений с контролем качества — основная функция DevOps.',
-    sprints:['S08','S09'],
-    sprintIds:[8,9],
+    sprints:['S07','S08'],
+    sprintIds:[7,8],
     prereqs:['docker','git'],
     unlocks:['terraform','k8s'],
     interview:'Failure-first: pipeline зелёный но деплой не произошёл. Три скрытые ошибки — найди.',
@@ -258,8 +259,8 @@ const NODES = [
     title:'GitHub Actions',
     desc:'Workflow engine встроенный в GitHub. Jobs, steps, secrets, environments, reusable workflows.',
     why:'Стандарт для open-source и большинства стартапов. Глубокая интеграция с GitHub экосистемой.',
-    sprints:['S08','S09'],
-    sprintIds:[8,9],
+    sprints:['S07','S08'],
+    sprintIds:[7,8],
     prereqs:['cicd','git'],
     unlocks:['terraform'],
     interview:'Объясни зачем нужны GitHub Environments с protection rules. Что без них?',
@@ -271,8 +272,8 @@ const NODES = [
     title:'Rollback Strategy',
     desc:'Стратегии отката: blue/green, canary, feature flags. Helm rollback, pipeline revert.',
     why:'Production деплой без стратегии отката = одна ошибка = downtime.',
-    sprints:['S09','S18'],
-    sprintIds:[9,18],
+    sprints:['S08','S18'],
+    sprintIds:[8,18],
     prereqs:['cicd'],
     unlocks:['k8s'],
     interview:'Опиши процесс emergency rollback если новая версия сломала production.',
@@ -582,8 +583,8 @@ const NODES = [
     title:'Broken CI Pipeline',
     desc:'Pipeline зелёный, но деплой не произошёл. Три скрытые ошибки в одном workflow файле.',
     why:'Зелёный pipeline ≠ успешный деплой. Нужно уметь читать логи и находить silent failures.',
-    sprints:['S09'],
-    sprintIds:[9],
+    sprints:['S07'],
+    sprintIds:[7],
     prereqs:['gh-actions'],
     unlocks:['troubleshoot'],
     interview:'GitHub Actions: как отлаживать pipeline который не делает то что должен делать?',
@@ -610,8 +611,8 @@ const NODES = [
     title:'Write Production Dockerfile',
     desc:'Multi-stage builds, layer caching, non-root user, .dockerignore, SIGTERM handling.',
     why:'Плохой Dockerfile = медленный CI (нет кэша), большой образ, security issues в production.',
-    sprints:['S06'],
-    sprintIds:[6],
+    sprints:['S05'],
+    sprintIds:[5],
     prereqs:['docker'],
     unlocks:['cicd'],
     interview:'Напиши Dockerfile для Python Flask приложения с multi-stage build и non-root user.',
@@ -642,6 +643,157 @@ const NODES = [
     unlocks:['troubleshoot'],
     interview:'Опиши свой debugging workflow для pod который не отвечает на запросы.',
     example:'Step 1: curl svc → Step 2: describe pod Events → Step 3: logs --previous → Step 4: exec -it sh'
+  },
+
+  // ── PYTHON ───────────────────────────────
+  {
+    id:'python', type:'core', group:'python', label:'Python', emoji:'🐍', size:'lg',
+    x:900, y:420,
+    title:'Python for DevOps',
+    desc:'Автоматизация, скрипты, boto3, kubernetes-client, CLI-инструменты. Python встроен в каждый спринт.',
+    why:'Python — рабочий инструмент DevOps инженера. boto3 для AWS, kubernetes-client для K8s, Click для CLI.',
+    sprints:['S01','S02','S03','S04','S05'],
+    sprintIds:[1,2,3,4,5],
+    prereqs:['linux'],
+    unlocks:['aws','k8s'],
+    interview:'Напиши скрипт который читает список EC2 инстансов через boto3 и выводит через rich таблицу.',
+    example:'git-stats.py → system-monitor.py → disk-monitor.py → network-checker.py → pytest+mock'
+  },
+  {
+    id:'python-boto3', type:'practical', group:'python', label:'boto3', emoji:'☁', size:'sm',
+    x:1060, y:380,
+    title:'boto3 & AWS SDK',
+    desc:'AWS SDK для Python. EC2, S3, IAM, Lambda, CloudWatch через boto3. aws-inventory, iam-auditor.',
+    why:'boto3 = программный доступ к AWS. platform-cli, aws-inventory, iam-auditor — showcase проекты.',
+    sprints:['S10','S12','S13','S15'],
+    sprintIds:[10,12,13,15],
+    prereqs:['python','aws'],
+    unlocks:['k8s'],
+    interview:'Как через boto3 получить список всех EC2 инстансов с тегом Environment=prod?',
+    example:'aws-inventory.py v2: EC2+S3+RDS+ELB через boto3, rich таблица, iam-auditor.py'
+  },
+  {
+    id:'python-k8s', type:'practical', group:'python', label:'K8s Client', emoji:'⎈', size:'sm',
+    x:1060, y:460,
+    title:'Kubernetes Python Client',
+    desc:'kubernetes Python client: listing pods, deployments, rollout management. deploy-helper.py.',
+    why:'Автоматизация K8s операций через Python — platform-cli, deploy-helper, platform-status.',
+    sprints:['S16','S17','S18','S19'],
+    sprintIds:[16,17,18,19],
+    prereqs:['python','k8s'],
+    unlocks:[],
+    interview:'Как через kubernetes Python client получить статус деплоя и дождаться rollout?',
+    example:'k8s-inventory.py, deploy-helper.py, platform-status.py v2, platform-cli'
+  },
+  {
+    id:'platform-cli', type:'practical', group:'python', label:'platform-cli', emoji:'🛠', size:'sm',
+    x:900, y:560,
+    title:'platform-cli (showcase)',
+    desc:'Click CLI объединяющий boto3 + k8s client + Cost Explorer + Prometheus API. Финальный Python проект.',
+    why:'Showcase ⭐ проект для LinkedIn Featured и резюме. Демонстрирует зрелость Python навыков.',
+    sprints:['S18','S19'],
+    sprintIds:[18,19],
+    prereqs:['python-boto3','python-k8s'],
+    unlocks:[],
+    interview:'Опиши архитектуру CLI инструмента который объединяет AWS и K8s данные в один вывод.',
+    example:'platform-cli status, platform-cli alerts (Prometheus), platform-cli cost'
+  },
+
+  // ── ANSIBLE ───────────────────────────────
+  {
+    id:'ansible', type:'core', group:'ansible', label:'Ansible', emoji:'⚡', size:'lg',
+    x:300, y:740,
+    title:'Ansible',
+    desc:'Конфигурационное управление. Playbooks, roles, Jinja2 templates, ansible-vault, dynamic inventory.',
+    why:'Terraform создаёт инфру, Ansible конфигурирует. Связка Terraform+Ansible = стандарт production.',
+    sprints:['S13'],
+    sprintIds:[13],
+    prereqs:['linux','terraform'],
+    unlocks:['aws'],
+    interview:'Объясни разницу Ansible vs Terraform. Что когда использовать? Почему нельзя всё делать одним?',
+    example:'3 роли: nginx+app+node_exporter. site.yml с тегами. ansible-vault для секретов. Dynamic EC2 inventory.'
+  },
+  {
+    id:'ansible-roles', type:'practical', group:'ansible', label:'Roles & Vault', emoji:'🔐', size:'sm',
+    x:150, y:740,
+    title:'Ansible Roles & Vault',
+    desc:'ansible-galaxy init, handlers, templates (Jinja2), group_vars, ansible-vault для секретов.',
+    why:'Роли = переиспользуемый код. Vault = секреты не попадают в git. Без этого ansible — shell скрипты.',
+    sprints:['S13'],
+    sprintIds:[13],
+    prereqs:['ansible'],
+    unlocks:['aws'],
+    interview:'Как зашифровать секреты через ansible-vault и передать пароль в CI pipeline?',
+    example:'group_vars/all/vault.yml зашифрован. В CI: echo VAULT_PASS > .vault_pass, --vault-password-file'
+  },
+
+  // ── GITOPS / ARGOCD ───────────────────────
+  {
+    id:'gitops', type:'core', group:'gitops', label:'GitOps', emoji:'🔄', size:'lg',
+    x:600, y:1490,
+    title:'GitOps',
+    desc:'Git как единственный источник истины для K8s состояния. Декларативный деплой через pull модель.',
+    why:'GitOps = воспроизводимость + аудит. Изменение в git → автоматический деплой в кластер.',
+    sprints:['S23'],
+    sprintIds:[23],
+    prereqs:['k8s','helm'],
+    unlocks:['ops'],
+    interview:'Чем GitOps отличается от традиционного CI/CD push деплоя? Что такое drift detection?',
+    example:'ArgoCD App of Apps pattern: один application.yaml управляет всем кластером'
+  },
+  {
+    id:'argocd', type:'practical', group:'gitops', label:'ArgoCD', emoji:'🚀', size:'sm',
+    x:440, y:1490,
+    title:'ArgoCD',
+    desc:'GitOps инструмент для K8s. Continuous reconciliation, App of Apps, sync policies.',
+    why:'ArgoCD — de facto стандарт GitOps в K8s. Встречается в каждой второй вакансии Platform Engineer.',
+    sprints:['S23'],
+    sprintIds:[23],
+    prereqs:['gitops','helm'],
+    unlocks:['ops'],
+    interview:'Что произойдёт если кто-то сделает kubectl apply вручную в кластер управляемый ArgoCD?',
+    example:'App of Apps: root application указывает на папку с другими Application манифестами'
+  },
+
+  // ── K8s SECURITY ─────────────────────────
+  {
+    id:'k8s-security', type:'core', group:'k8s', label:'K8s Security', emoji:'🛡', size:'lg',
+    x:600, y:1640,
+    title:'Kubernetes Security',
+    desc:'RBAC, NetworkPolicy, Sealed Secrets, Cosign, Kyverno policy engine.',
+    why:'Security misconfiguration — #1 причина K8s инцидентов. CKS требует этих знаний.',
+    sprints:['S24'],
+    sprintIds:[24],
+    prereqs:['k8s','observability'],
+    unlocks:['ops'],
+    interview:'Что такое principle of least privilege в K8s RBAC? Как проверить какие права у ServiceAccount?',
+    example:'RBAC audit через python iam-auditor.py, NetworkPolicy deny-all + allow конкретные поды'
+  },
+  {
+    id:'rbac', type:'practical', group:'k8s', label:'RBAC', emoji:'🔑', size:'sm',
+    x:440, y:1640,
+    title:'RBAC & Network Policy',
+    desc:'Role, ClusterRole, RoleBinding. NetworkPolicy: deny-all by default + whitelist. Sealed Secrets.',
+    why:'Без RBAC — любой под может читать secrets. Без NetworkPolicy — любой под может говорить с любым.',
+    sprints:['S24'],
+    sprintIds:[24],
+    prereqs:['k8s-security'],
+    unlocks:['ops'],
+    interview:'Напиши RBAC который даёт ServiceAccount права только на get pods в одном namespace.',
+    example:'kubectl auth can-i list pods --as=system:serviceaccount:default:myapp'
+  },
+  {
+    id:'kyverno', type:'practical', group:'k8s', label:'Kyverno', emoji:'📋', size:'sm',
+    x:760, y:1640,
+    title:'Kyverno Policy Engine',
+    desc:'Policy as Code для K8s. Блокировка latest тегов, обязательные resource limits, мутирующие политики.',
+    why:'Kyverno/OPA Gatekeeper — часто встречается в вакансиях Platform Engineer рядом с K8s Security.',
+    sprints:['S24'],
+    sprintIds:[24],
+    prereqs:['k8s-security'],
+    unlocks:['ops'],
+    interview:'Как написать Kyverno политику которая запрещает контейнеры с тегом :latest?',
+    example:'ClusterPolicy с validation rule: image tag != latest → deny на AdmissionReview'
   },
 ];
 
@@ -688,6 +840,21 @@ const EDGES = [
   ['docker','skill-dockerfile'],['skill-dockerfile','cicd'],
   ['terraform','skill-tf-plan'],['skill-tf-plan','aws'],
   ['k8s-deploy','skill-debug-k8s'],['skill-debug-k8s','troubleshoot'],
+  // Python
+  ['linux','python'],
+  ['python','python-boto3'],['python','python-k8s'],
+  ['aws','python-boto3'],['k8s','python-k8s'],
+  ['python-boto3','platform-cli'],['python-k8s','platform-cli'],
+  // Ansible
+  ['linux','ansible'],['terraform','ansible'],
+  ['ansible','ansible-roles'],['ansible','aws'],['ansible-roles','aws'],
+  // GitOps
+  ['k8s','gitops'],['helm','gitops'],
+  ['gitops','argocd'],['argocd','ops'],
+  // K8s Security
+  ['k8s','k8s-security'],['observability','k8s-security'],
+  ['k8s-security','rbac'],['k8s-security','kyverno'],
+  ['rbac','ops'],['kyverno','ops'],
 ];
 
 // ─────────────────────────────────────────
@@ -751,6 +918,7 @@ const GROUP_COLORS = {
   linux:'#38BDF8', net:'#818CF8', docker:'#60A5FA',
   cicd:'#34D399', tf:'#A78BFA', aws:'#FB923C',
   k8s:'#F87171', obs:'#FFC443', ops:'#C084FC',
+  python:'#FACC15', ansible:'#4ADE80', gitops:'#38BDF8',
   // system layers
   source:'#38BDF8', delivery:'#34D399', platform:'#A78BFA',
   runtime:'#F87171', observability:'#FFC443',
@@ -759,6 +927,7 @@ const GROUP_LABELS = {
   linux:'Foundations', net:'Networking', docker:'Containers',
   cicd:'CI/CD', tf:'Infrastructure', aws:'Cloud',
   k8s:'Kubernetes', obs:'Observability', ops:'Operations',
+  python:'Python', ansible:'Ansible', gitops:'GitOps',
   source:'Source', delivery:'Delivery', platform:'Platform',
   runtime:'Runtime', observability:'Observability',
 };
